@@ -1,0 +1,2026 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VIOLATE — The Void</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#000000;
+    --paper:#FAFAFA;
+    --ghost:rgba(255,255,255,0.4);
+    --ghost-low:rgba(255,255,255,0.12);
+    --ghost-hair:rgba(255,255,255,0.06);
+    --accent:#FF2A2A;
+    --accent-soft:rgba(255,42,42,0.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--void);color:var(--paper);font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-weight:300;overflow-x:hidden;min-height:100vh}
+  body{cursor:none}
+  @media (hover:none){ body{cursor:auto} }
+  a{color:inherit;text-decoration:none}
+  button{background:none;border:none;color:inherit;font:inherit;cursor:none}
+  @media (hover:none){ button{cursor:pointer} }
+  .mono{font-family:'Space Mono',ui-monospace,Menlo,monospace}
+  .accent{color:var(--accent)}
+  .italic-red{font-style:italic;color:var(--accent)}
+
+  /* grid overlay */
+  .void-grid{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      linear-gradient(to right, var(--ghost-hair) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--ghost-hair) 1px, transparent 1px);
+    background-size:calc(100vw/12) calc(100vw/12);
+    opacity:0;transition:opacity 1200ms ease;
+  }
+  .revealed .void-grid{opacity:1}
+
+  /* crosshair cursor */
+  .cursor{
+    position:fixed;top:0;left:0;width:24px;height:24px;pointer-events:none;z-index:9999;
+    transform:translate(-50%,-50%);mix-blend-mode:difference;transition:opacity 200ms;
+  }
+  .cursor::before,.cursor::after{
+    content:"";position:absolute;background:#fff;
+  }
+  .cursor::before{left:50%;top:0;width:1px;height:100%;transform:translateX(-50%)}
+  .cursor::after{top:50%;left:0;height:1px;width:100%;transform:translateY(-50%)}
+  .cursor-link::before,.cursor-link::after{display:none}
+  .cursor-ring{
+    position:fixed;top:0;left:0;width:54px;height:54px;border-radius:50%;
+    border:1px solid var(--accent);pointer-events:none;z-index:9998;
+    transform:translate(-50%,-50%);opacity:0;transition:opacity 400ms,width 300ms,height 300ms,border-color 300ms;
+  }
+  .oath-ringed .cursor-ring{opacity:.7}
+
+  /* page wrapper */
+  .page{position:relative;z-index:1;min-height:100vh}
+  .reveal-gate{
+    position:fixed;inset:0;background:#000;z-index:100;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+    transition:opacity 900ms ease;
+  }
+  .revealed .reveal-gate{opacity:0;pointer-events:none}
+  .reveal-gate .hint{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.2em;color:var(--ghost);text-transform:uppercase}
+  .reveal-gate .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.6)}}
+
+  /* HEADER */
+  header.nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+    padding:22px 32px;mix-blend-mode:difference;
+  }
+  .nav-left{display:flex;gap:28px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-family:'Space Mono',monospace}
+  .nav-left a{opacity:.75;transition:opacity .2s}
+  .nav-left a:hover{opacity:1}
+  .nav-left a.active{opacity:1;color:var(--accent)}
+  .nav-right{justify-self:end;display:flex;gap:20px;align-items:center;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-family:'Space Mono',monospace}
+  .nav-right .rank-chip{
+    display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--ghost-low);
+    transition:border-color .3s;
+  }
+  .nav-right .rank-chip::before{
+    content:"";width:6px;height:6px;background:var(--accent);border-radius:50%;
+  }
+  .nav-right .swear-cta{color:var(--accent);letter-spacing:.2em;border:1px solid var(--accent);padding:6px 10px;transition:background .2s,color .2s}
+  .nav-right .swear-cta:hover{background:var(--accent);color:#000}
+
+  /* wordmark */
+  .wordmark{
+    font-family:'Inter',sans-serif;font-weight:900;letter-spacing:-.04em;
+    font-size:28px;position:relative;
+  }
+  .wordmark svg{display:block}
+
+  /* footer */
+  footer.foot{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px;align-items:end;
+    padding:64px 32px 24px;border-top:1px solid var(--ghost-hair);
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--ghost);
+  }
+  footer .violation-list{display:flex;gap:8px;align-items:center}
+  footer .violation-list input{
+    background:transparent;border:none;border-bottom:1px solid var(--ghost-low);
+    color:var(--paper);font-family:'Space Mono',monospace;font-size:11px;padding:8px 0;
+    letter-spacing:.15em;text-transform:uppercase;width:260px;outline:none;
+  }
+  footer .violation-list input::placeholder{color:var(--ghost)}
+  footer .violation-list button{color:var(--accent);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em}
+  footer .tick{color:var(--paper)}
+  footer .tweaks-link{color:var(--ghost);font-size:10px;letter-spacing:.2em;cursor:none}
+  footer .tweaks-link:hover{color:var(--accent)}
+
+  /* ===== HOME ===== */
+  .hero{
+    min-height:100vh;position:relative;
+    display:grid;grid-template-columns:repeat(12,1fr);column-gap:32px;
+    padding:120px 32px 80px;
+  }
+  .hero-meta{grid-column:1/4;display:flex;flex-direction:column;gap:48px}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--ghost)}
+  .drop-chip{
+    display:inline-flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  }
+  .drop-chip .blink{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:blink 1.2s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+
+  .hero-title{grid-column:4/11;align-self:center;position:relative}
+  .hero-title h1{
+    font-family:'Inter',sans-serif;font-weight:900;letter-spacing:-.05em;line-height:.88;
+    font-size:clamp(64px,11vw,180px);
+  }
+  .hero-title h1 .softer{font-weight:200;color:var(--ghost);font-style:italic}
+  .hero-title .lede{
+    margin-top:32px;max-width:520px;font-weight:300;font-size:17px;line-height:1.55;color:rgba(255,255,255,.8);
+  }
+  .hero-title .lede em{color:var(--accent);font-style:italic;font-weight:400}
+
+  .hero-num{grid-column:11/13;display:flex;flex-direction:column;align-items:flex-end;gap:16px;align-self:start}
+  .hero-num .big{
+    font-family:'Inter',sans-serif;font-weight:900;font-size:140px;line-height:.85;letter-spacing:-.06em;
+    color:var(--paper);
+  }
+  .hero-num .big .slash{color:var(--ghost)}
+
+  /* 3D relic */
+  .relic-stage{
+    grid-column:1/13;margin-top:80px;position:relative;height:520px;perspective:1400px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .relic{
+    position:relative;width:340px;height:420px;transform-style:preserve-3d;
+    transition:transform 200ms cubic-bezier(.22,1,.36,1);
+    animation:bob 6s ease-in-out infinite;
+  }
+  @keyframes bob{0%,100%{transform:translateY(0) rotateX(var(--rx,-8deg)) rotateY(var(--ry,12deg))}50%{transform:translateY(-14px) rotateX(var(--rx,-8deg)) rotateY(var(--ry,12deg))}}
+  .relic .face{
+    position:absolute;inset:0;border:1px solid var(--ghost-low);
+    background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,42,42,.04));
+    backdrop-filter:blur(2px);
+  }
+  .relic .face.back{transform:translateZ(-80px)}
+  .relic .face.front{transform:translateZ(80px);border-color:var(--accent-soft)}
+  .relic .face.left{transform:rotateY(-90deg) translateZ(80px);width:160px;left:-80px}
+  .relic .face.right{transform:rotateY(90deg) translateZ(80px);width:160px;left:260px}
+  .relic .label{
+    position:absolute;inset:auto 0 24px 24px;
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--ghost);text-transform:uppercase;
+  }
+  .relic .cipher{
+    position:absolute;inset:24px auto auto 24px;font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.15em;
+  }
+  .relic .glow{
+    position:absolute;inset:-80px;background:radial-gradient(closest-side,var(--accent-soft),transparent 70%);
+    filter:blur(40px);pointer-events:none;z-index:-1;
+  }
+  .relic-stage::before{
+    content:"";position:absolute;left:50%;bottom:40px;transform:translateX(-50%);
+    width:260px;height:12px;border-radius:50%;
+    background:radial-gradient(closest-side,rgba(255,42,42,.35),transparent 70%);
+    filter:blur(4px);
+  }
+
+  /* relic grid under hero */
+  .relic-grid{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--ghost-hair);
+    margin:80px 32px 0;border-top:1px solid var(--ghost-hair);border-bottom:1px solid var(--ghost-hair);
+  }
+  .relic-grid .cell{
+    background:#000;padding:28px 20px 22px;display:flex;flex-direction:column;gap:60px;min-height:260px;position:relative;
+    transition:background .3s;
+  }
+  .relic-grid .cell:hover{background:#0a0a0a}
+  .relic-grid .cell:hover .thumb{transform:scale(1.04);border-color:var(--accent-soft)}
+  .cell .num{font-family:'Inter',sans-serif;font-weight:900;font-size:14px;letter-spacing:.05em}
+  .cell .num .of{color:var(--ghost);font-weight:300}
+  .cell .thumb{
+    flex:1;border:1px solid var(--ghost-low);display:flex;align-items:center;justify-content:center;
+    background:
+      repeating-linear-gradient(-45deg,rgba(255,255,255,.015) 0 6px,transparent 6px 14px);
+    transition:transform .4s cubic-bezier(.22,1,.36,1),border-color .4s;
+    position:relative;
+  }
+  .cell .thumb svg{width:64%;height:auto}
+  .cell .meta{display:flex;justify-content:space-between;align-items:baseline;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  .cell .meta .name{color:var(--paper)}
+  .cell .meta .price{color:var(--accent)}
+  .cell.sold .thumb{filter:grayscale(1) contrast(.8);opacity:.5}
+  .cell.sold::after{
+    content:"RESERVED";position:absolute;top:12px;right:12px;
+    font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--accent);
+  }
+
+  /* countdown strip */
+  .countdown-strip{
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:32px;
+    padding:28px 32px;border-bottom:1px solid var(--ghost-hair);
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  }
+  .countdown-strip .clock{
+    justify-self:center;display:flex;gap:16px;align-items:baseline;
+    font-family:'Inter',sans-serif;font-weight:900;font-size:56px;letter-spacing:-.04em;
+  }
+  .countdown-strip .clock .seg{min-width:90px;text-align:center}
+  .countdown-strip .clock .cln{color:var(--accent);font-size:40px}
+  .countdown-strip .clock .lbl{display:block;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--ghost);font-weight:400;margin-top:6px}
+  .countdown-strip .status{color:var(--ghost)}
+  .countdown-strip .status .dot{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-right:8px;animation:blink 1.2s infinite}
+
+  /* blood hour */
+  body.bloodhour{background:#0a0000}
+  body.bloodhour .void-grid{
+    background-image:
+      linear-gradient(to right, rgba(255,42,42,.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,42,42,.08) 1px, transparent 1px);
+  }
+  body.bloodhour .hero::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(ellipse at 30% 20%,rgba(255,42,42,.18),transparent 60%);
+    pointer-events:none;
+  }
+
+  /* manifesto strip */
+  .manifesto{
+    padding:120px 32px;display:grid;grid-template-columns:repeat(12,1fr);column-gap:32px;
+  }
+  .manifesto .bignum{grid-column:1/3;font-family:'Inter',sans-serif;font-weight:900;font-size:140px;line-height:.8;color:var(--accent);letter-spacing:-.06em}
+  .manifesto .copy{grid-column:4/11;font-size:40px;font-weight:200;line-height:1.15;letter-spacing:-.02em;text-wrap:pretty}
+  .manifesto .copy em{color:var(--accent);font-style:italic;font-weight:400}
+  .manifesto .sig{grid-column:11/13;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--ghost);text-transform:uppercase;align-self:end}
+
+  /* ===== DROPS PAGE ===== */
+  .drops-page{padding:120px 32px 64px}
+  .drops-head{display:grid;grid-template-columns:repeat(12,1fr);column-gap:32px;margin-bottom:80px}
+  .drops-head .title{grid-column:1/10;font-family:'Inter';font-weight:900;font-size:clamp(56px,8vw,140px);line-height:.9;letter-spacing:-.05em}
+  .drops-head .title .muted{color:var(--ghost);font-weight:200;font-style:italic}
+  .drops-head .note{grid-column:10/13;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--ghost);align-self:end;text-align:right;line-height:1.6}
+
+  .timeline{position:relative}
+  .timeline::before{
+    content:"";position:absolute;left:17%;top:0;bottom:0;width:1px;background:var(--ghost-hair);
+  }
+  .drop-row{
+    display:grid;grid-template-columns:17% 1fr;align-items:stretch;
+    border-top:1px solid var(--ghost-hair);padding:48px 0;position:relative;cursor:none;
+    transition:background .4s;
+  }
+  .drop-row:hover{background:rgba(255,42,42,.03)}
+  .drop-row .when{
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--ghost);
+    padding-right:32px;position:relative;
+  }
+  .drop-row .when::after{
+    content:"";position:absolute;right:-5px;top:6px;width:9px;height:9px;border:1px solid var(--ghost-low);background:#000;border-radius:50%;
+  }
+  .drop-row.live .when::after{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 6px rgba(255,42,42,.12)}
+  .drop-row .body{padding-left:48px;display:grid;grid-template-columns:auto 1fr auto;gap:32px;align-items:center}
+  .drop-row .body .idx{font-family:'Inter';font-weight:900;font-size:72px;letter-spacing:-.05em;color:var(--paper);min-width:140px}
+  .drop-row.upcoming .body .idx{color:var(--ghost)}
+  .drop-row .body .detail h3{font-family:'Inter';font-weight:900;font-size:28px;letter-spacing:-.02em;margin-bottom:10px}
+  .drop-row .body .detail p{font-size:14px;color:rgba(255,255,255,.7);max-width:520px;line-height:1.5}
+  .drop-row .body .detail .tag{display:inline-block;margin-top:14px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
+  .drop-row .state{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;text-align:right;line-height:1.8}
+  .drop-row .state .n{font-family:'Inter';font-weight:900;font-size:32px;color:var(--accent);letter-spacing:-.03em;display:block;margin-bottom:4px}
+  .drop-row.upcoming .state .n{color:var(--paper)}
+  .drop-row.sold .state .n{color:var(--ghost);text-decoration:line-through}
+
+  /* ===== STORE CATEGORIES ===== */
+  .cat-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--ghost-hair);
+    border-top:1px solid var(--ghost-hair);border-bottom:1px solid var(--ghost-hair);margin-bottom:48px;
+  }
+  .cat-card{
+    background:#000;padding:32px 24px;display:flex;flex-direction:column;gap:24px;min-height:260px;
+    transition:background .3s;
+  }
+  .cat-card:hover{background:#0a0a0a}
+  .cat-hindi{font-family:'Inter';font-weight:900;font-size:48px;letter-spacing:-.03em;line-height:1}
+  .cat-name{font-family:'Inter';font-weight:900;font-size:28px;letter-spacing:-.02em}
+  .cat-desc{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;flex:1}
+  .cat-count{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase}
+  .store-filter{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+  .store-filter .chip{
+    padding:10px 16px;border:1px solid var(--ghost-low);font-family:'Space Mono',monospace;
+    font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--paper);transition:all .2s;
+  }
+  .store-filter .chip:hover{border-color:var(--paper)}
+  .store-filter .chip.on{border-color:var(--accent);color:var(--accent)}
+
+  /* ===== REBELS ===== */
+  .rebel-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--ghost-hair);
+    border-top:1px solid var(--ghost-hair);border-bottom:1px solid var(--ghost-hair);margin-bottom:48px;
+  }
+  .rebel-card{background:#000;padding:28px;display:flex;flex-direction:column;gap:20px;min-height:240px;transition:background .3s}
+  .rebel-card:hover{background:#0a0a0a}
+  .rebel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .rebel-name{font-family:'Inter';font-weight:900;font-size:22px;letter-spacing:-.02em}
+  .rebel-handle{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--ghost);text-transform:uppercase;margin-top:6px}
+  .rebel-royalty{font-family:'Inter';font-weight:900;font-size:28px;color:var(--accent);letter-spacing:-.03em;text-align:right}
+  .rebel-royalty span{display:block;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--ghost);font-weight:400;margin-top:4px}
+  .rebel-bio{font-size:14px;line-height:1.5;color:rgba(255,255,255,0.72);flex:1}
+  .rebel-foot{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--ghost);text-transform:uppercase;padding-top:16px;border-top:1px solid var(--ghost-hair)}
+  .submit-strip{
+    display:grid;grid-template-columns:1fr auto;gap:48px;align-items:center;
+    padding:56px 0;border-top:1px solid var(--ghost-hair);
+  }
+
+  /* ===== OATH ===== */
+  .oath-ladder{display:flex;flex-direction:column;border-top:1px solid var(--ghost-hair)}
+  .oath-tier{
+    display:grid;grid-template-columns:120px 1fr auto;gap:40px;align-items:start;
+    padding:40px 0;border-bottom:1px solid var(--ghost-hair);transition:background .3s;
+  }
+  .oath-tier:hover{background:rgba(255,255,255,0.015)}
+  .oath-tier.active{background:rgba(255,42,42,0.03)}
+  .oath-num{font-family:'Inter';font-weight:900;font-size:88px;line-height:.85;letter-spacing:-.05em}
+  .oath-name{font-family:'Inter';font-weight:900;font-size:36px;letter-spacing:-.02em;margin-bottom:8px}
+  .oath-line{font-size:15px;color:rgba(255,255,255,0.72);margin-bottom:20px;line-height:1.5}
+  .oath-unlocks{list-style:none;display:flex;flex-direction:column;gap:6px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.55)}
+  .oath-unlocks li::before{content:"→ ";color:var(--accent);margin-right:4px}
+  .oath-state{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--ghost);align-self:center}
+  .oath-tier.active .oath-state{color:var(--accent)}
+  .oath-swear-btn{
+    margin-top:18px;display:inline-flex;align-items:center;gap:12px;
+    padding:14px 22px;border:1px solid var(--accent);color:var(--accent);
+    font-family:'Inter';font-weight:900;font-size:14px;letter-spacing:.15em;text-transform:uppercase;
+    transition:background .2s,color .2s;
+  }
+  .oath-swear-btn:hover{background:var(--accent);color:#000}
+
+  /* ===== JOURNAL ===== */
+  .journal-grid{display:flex;flex-direction:column;border-top:1px solid var(--ghost-hair)}
+  .journal-row{
+    display:grid;grid-template-columns:80px 140px 1fr 180px 140px;gap:24px;align-items:center;
+    padding:32px 0;border-bottom:1px solid var(--ghost-hair);transition:background .3s;
+  }
+  .journal-row:hover{background:rgba(255,255,255,0.02)}
+  .journal-row:hover .jt{color:var(--accent)}
+  .jn{font-family:'Space Mono',monospace;font-size:11px;color:var(--ghost);letter-spacing:.1em}
+  .jk{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase}
+  .jt{font-family:'Inter';font-weight:900;font-size:24px;letter-spacing:-.02em;transition:color .2s}
+  .jby{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--ghost);text-transform:uppercase}
+  .jw{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--ghost);text-transform:uppercase;text-align:right}
+
+  /* ===== ACCOUNT ===== */
+  .acct-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--ghost-hair);
+    border:1px solid var(--ghost-hair);
+  }
+  .acct-card{background:#000;padding:32px;min-height:180px}
+  .acct-card h4{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--ghost);font-weight:400;margin-bottom:16px}
+  .acct-card p{font-size:15px;line-height:1.6;margin-bottom:8px;color:rgba(255,255,255,0.85)}
+
+  /* ===== GRAVEYARD ===== */
+  .grave-grid{border-top:1px solid var(--ghost-hair)}
+  .grave-row{
+    display:grid;grid-template-columns:140px 1fr 100px 140px auto;gap:24px;align-items:center;
+    padding:28px 0;border-bottom:1px solid var(--ghost-hair);transition:background .3s;
+  }
+  .grave-row:hover{background:rgba(255,255,255,0.02)}
+  .gv-code{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--ghost)}
+  .gv-name{font-family:'Inter';font-weight:500;font-size:18px}
+  .gv-pieces{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--accent)}
+  .gv-price{font-family:'Inter';font-weight:700;font-size:20px}
+  .gv-price .was{color:var(--ghost);text-decoration:line-through;font-size:13px;margin-right:10px;font-weight:300}
+
+  /* ===== PDP ===== */
+  .pdp{
+    min-height:100vh;display:grid;grid-template-columns:1.2fr 1fr;gap:0;padding-top:72px;
+  }
+  .pdp-stage{
+    position:relative;min-height:calc(100vh - 72px);
+    background:radial-gradient(ellipse at center,rgba(255,42,42,.06),transparent 60%);
+    display:flex;align-items:center;justify-content:center;perspective:1400px;
+    border-right:1px solid var(--ghost-hair);overflow:hidden;
+  }
+  .pdp-stage .pedestal{
+    position:absolute;bottom:12%;left:50%;transform:translateX(-50%);
+    width:360px;height:10px;border-radius:50%;
+    background:radial-gradient(closest-side,rgba(255,42,42,.35),transparent 70%);
+    filter:blur(3px);
+  }
+  .pdp-relic{
+    position:relative;width:320px;height:420px;transform-style:preserve-3d;
+    transition:transform .2s cubic-bezier(.22,1,.36,1);
+    animation:bob 7s ease-in-out infinite;
+  }
+  .pdp-relic .face{position:absolute;inset:0;border:1px solid var(--ghost-low);background:rgba(255,255,255,.02)}
+  .pdp-relic .face.back{transform:translateZ(-90px)}
+  .pdp-relic .face.front{transform:translateZ(90px);border-color:var(--accent-soft);
+    background:
+      linear-gradient(180deg,rgba(255,42,42,.04),transparent 60%),
+      repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 2px,transparent 2px 6px);
+  }
+  .pdp-relic .face.left{transform:rotateY(-90deg) translateZ(90px);width:180px;left:-90px}
+  .pdp-relic .face.right{transform:rotateY(90deg) translateZ(90px);width:180px;left:230px}
+  .pdp-relic .face.top{transform:rotateX(90deg) translateZ(210px);height:180px;top:-90px;transform-origin:center center}
+  .pdp-relic .stamp{
+    position:absolute;bottom:24px;left:24px;right:24px;display:flex;justify-content:space-between;
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--ghost);text-transform:uppercase;
+  }
+  .pdp-relic .stamp .r{color:var(--accent)}
+  .pdp-stage .hint{
+    position:absolute;left:32px;bottom:32px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ghost);
+  }
+  .pdp-stage .count{
+    position:absolute;right:32px;top:32px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ghost);text-align:right;line-height:1.8
+  }
+  .pdp-stage .count .live{color:var(--accent)}
+
+  .pdp-info{padding:64px 56px 48px;display:flex;flex-direction:column;gap:40px;max-width:640px}
+  .pdp-info .crumb{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--ghost)}
+  .pdp-info h1{font-family:'Inter';font-weight:900;font-size:64px;line-height:.9;letter-spacing:-.04em}
+  .pdp-info h1 .it{color:var(--accent);font-style:italic;font-weight:400}
+  .pdp-info .price{font-family:'Space Mono',monospace;font-size:18px;letter-spacing:.1em}
+  .pdp-info .price .was{color:var(--ghost);text-decoration:line-through;margin-right:12px;font-size:14px}
+
+  .variants{display:flex;flex-direction:column;gap:16px}
+  .variants .label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--ghost)}
+  .variant-row{display:flex;gap:10px;flex-wrap:wrap}
+  .variant-row .chip{
+    padding:10px 16px;border:1px solid var(--ghost-low);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+    transition:all .2s;
+  }
+  .variant-row .chip:hover{border-color:var(--paper)}
+  .variant-row .chip.on{border-color:var(--accent);color:var(--accent)}
+  .variant-row .chip.out{opacity:.3;text-decoration:line-through}
+
+  .reserve{
+    display:grid;grid-template-columns:1fr auto;gap:24px;align-items:stretch;
+    border-top:1px solid var(--ghost-hair);padding-top:32px;
+  }
+  .btn-reserve{
+    display:flex;align-items:center;justify-content:space-between;padding:22px 28px;
+    border:1px solid var(--accent);background:transparent;color:var(--paper);
+    font-family:'Inter';font-weight:900;font-size:22px;letter-spacing:.1em;text-transform:uppercase;
+    transition:background .3s,color .3s;position:relative;overflow:hidden;
+  }
+  .btn-reserve::after{content:"→";font-weight:300;color:var(--accent);font-size:24px;transition:transform .3s,color .3s}
+  .btn-reserve:hover{background:var(--accent);color:#000}
+  .btn-reserve:hover::after{color:#000;transform:translateX(6px)}
+  .btn-aux{
+    padding:22px 24px;border:1px solid var(--ghost-low);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ghost);
+    transition:color .2s,border-color .2s;
+  }
+  .btn-aux:hover{color:var(--paper);border-color:var(--paper)}
+
+  .story{display:flex;flex-direction:column;gap:18px;border-top:1px solid var(--ghost-hair);padding-top:32px}
+  .story h4{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--ghost);font-weight:400}
+  .story p{font-size:15px;line-height:1.6;color:rgba(255,255,255,.8)}
+  .story .maker{display:flex;justify-content:space-between;margin-top:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--ghost);text-transform:uppercase}
+  .story .maker b{color:var(--paper);font-weight:400}
+
+  .specs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--ghost-hair);border:1px solid var(--ghost-hair)}
+  .specs .spec{background:#000;padding:20px;display:flex;flex-direction:column;gap:6px}
+  .specs .spec .k{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ghost)}
+  .specs .spec .v{font-family:'Inter';font-weight:500;font-size:18px}
+
+  /* reservation ritual overlay */
+  .ritual{
+    position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:40px;
+    opacity:0;pointer-events:none;transition:opacity .6s;
+  }
+  .ritual.on{opacity:1;pointer-events:auto}
+  .ritual .circle{
+    width:220px;height:220px;border:1px solid var(--accent);border-radius:50%;position:relative;
+    animation:ritualPulse 2s ease-in-out infinite;
+  }
+  .ritual .circle::before{
+    content:"";position:absolute;inset:20px;border:1px solid var(--accent-soft);border-radius:50%;
+    animation:ritualPulse 2s ease-in-out infinite reverse;
+  }
+  .ritual .circle::after{
+    content:"◉";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--accent);font-size:48px;
+  }
+  @keyframes ritualPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,42,42,.4)}50%{box-shadow:0 0 0 40px rgba(255,42,42,0)}}
+  .ritual .text{font-family:'Inter';font-weight:900;font-size:34px;letter-spacing:.05em;text-align:center;line-height:1.1}
+  .ritual .text .caret{color:var(--accent);animation:blink 1s infinite}
+  .ritual .sub{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--ghost)}
+
+  /* Tweaks */
+  .tweaks-panel{
+    position:fixed;right:24px;bottom:24px;z-index:80;width:300px;
+    background:#0a0a0a;border:1px solid var(--ghost-low);padding:18px;
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;
+    display:none;flex-direction:column;gap:14px;
+    max-height:80vh;overflow-y:auto;
+  }
+  .tweaks-panel.on{display:flex}
+  .tweaks-panel h5{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);font-weight:400;display:flex;justify-content:space-between;align-items:center}
+  .tweaks-panel h5 .close{color:var(--ghost);cursor:none}
+  .tweaks-panel .row{display:flex;flex-direction:column;gap:6px}
+  .tweaks-panel .row .k{color:var(--ghost);text-transform:uppercase;letter-spacing:.2em;font-size:9px}
+  .tweaks-panel .seg{display:flex;gap:4px;flex-wrap:wrap}
+  .tweaks-panel .seg button{padding:6px 8px;border:1px solid var(--ghost-low);font-size:10px;color:var(--paper);text-transform:uppercase;letter-spacing:.1em}
+  .tweaks-panel .seg button.on{border-color:var(--accent);color:var(--accent)}
+  .tweaks-panel .swatch{width:18px;height:18px;border:1px solid var(--ghost-low);padding:0;display:inline-block}
+  .tweaks-panel .swatch.on{outline:1px solid var(--paper);outline-offset:2px}
+  .tweaks-panel .hint{color:var(--ghost);font-size:9px;letter-spacing:.15em;text-transform:uppercase}
+
+  /* glitch */
+  .glitch-on .page{animation:glitch .3s 2}
+  @keyframes glitch{0%{filter:invert(0)}20%{filter:invert(1) hue-rotate(90deg)}40%{transform:translateX(-3px)}60%{transform:translateX(3px)}80%{filter:invert(0)}100%{transform:translateX(0)}}
+
+  /* ===== NEW: WEEKLY VIOLATION HOME VARIANT ===== */
+  .weekly-live{
+    min-height:100vh;position:relative;padding:120px 32px 80px;
+    display:grid;grid-template-columns:repeat(12,1fr);column-gap:32px;row-gap:40px;
+    background:radial-gradient(ellipse at 50% 0%, rgba(255,42,42,.12), transparent 60%);
+  }
+  .weekly-live::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(255,42,42,.04) 0 2px, transparent 2px 6px);
+    mix-blend-mode:screen;opacity:.5;
+  }
+  .live-banner{
+    grid-column:1/13;display:flex;align-items:center;gap:20px;
+    padding:16px 24px;border:1px solid var(--accent);
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--accent);background:rgba(255,42,42,.04);
+    animation:livePulse 2.2s ease-in-out infinite;
+  }
+  @keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,42,42,.35);border-color:var(--accent)}50%{box-shadow:0 0 0 8px rgba(255,42,42,0);border-color:#ff6a6a}}
+  .live-banner .live-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;animation:blink .7s infinite;flex-shrink:0}
+  .live-banner .live-copy{flex:1}
+  .live-banner .live-copy b{font-family:'Inter';font-weight:900;font-size:18px;letter-spacing:.08em;color:var(--paper);margin-right:12px}
+  .live-banner .live-tick{
+    font-family:'Inter';font-weight:900;font-size:32px;letter-spacing:-.03em;color:var(--paper);
+    animation:tickPulse 1s ease-in-out infinite;
+  }
+  @keyframes tickPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.97)}}
+
+  .live-title{grid-column:1/8;align-self:center}
+  .live-title h1{font-family:'Inter';font-weight:900;font-size:clamp(56px,9vw,140px);line-height:.9;letter-spacing:-.05em}
+  .live-title h1 .live-red{color:var(--accent);font-style:italic;font-weight:400}
+  .live-title .lede{margin-top:28px;max-width:520px;font-size:17px;line-height:1.55;color:rgba(255,255,255,.82)}
+  .live-title .lede em{color:var(--accent);font-style:italic}
+
+  .live-feature{
+    grid-column:8/13;border:1px solid var(--accent-soft);
+    background:#060606;padding:32px;
+    display:flex;flex-direction:column;gap:24px;align-self:stretch;
+    position:relative;overflow:hidden;
+  }
+  .live-feature::after{
+    content:"FEATURED";position:absolute;top:14px;right:14px;
+    font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.25em;color:var(--accent);
+  }
+  .live-feature .ft-thumb{
+    min-height:240px;border:1px solid var(--ghost-low);display:flex;align-items:center;justify-content:center;
+    background:repeating-linear-gradient(-45deg,rgba(255,42,42,.04) 0 6px,transparent 6px 14px);
+  }
+  .live-feature .ft-thumb svg{width:56%;height:auto}
+  .live-feature .ft-name{font-family:'Inter';font-weight:900;font-size:32px;letter-spacing:-.02em}
+  .live-feature .ft-meta{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--ghost);text-transform:uppercase}
+  .live-feature .ft-meta .price{color:var(--accent);font-size:15px}
+  .live-feature .ft-reserve{
+    padding:16px 20px;border:1px solid var(--accent);color:var(--paper);font-family:'Inter';font-weight:900;
+    font-size:16px;letter-spacing:.15em;text-transform:uppercase;
+    display:flex;justify-content:space-between;align-items:center;transition:background .2s,color .2s;
+  }
+  .live-feature .ft-reserve::after{content:"→";color:var(--accent);font-weight:300}
+  .live-feature .ft-reserve:hover{background:var(--accent);color:#000}
+  .live-feature .ft-reserve:hover::after{color:#000}
+
+  .live-clock{
+    grid-column:1/13;display:flex;align-items:center;justify-content:center;gap:32px;
+    padding:40px 24px;border:1px solid var(--accent-soft);
+    background:linear-gradient(180deg,rgba(255,42,42,.03),transparent);
+  }
+  .live-clock .pulse-num{
+    font-family:'Inter';font-weight:900;font-size:120px;line-height:.85;letter-spacing:-.06em;color:var(--accent);
+    animation:clockPulse 1s ease-in-out infinite;
+  }
+  @keyframes clockPulse{0%,100%{opacity:1;text-shadow:0 0 24px rgba(255,42,42,.6)}50%{opacity:.7;text-shadow:0 0 8px rgba(255,42,42,.3)}}
+  .live-clock .label{font-family:'Space Mono',monospace;font-size:14px;letter-spacing:.3em;text-transform:uppercase;color:var(--ghost)}
+
+  .live-grid-dim{opacity:.42;filter:saturate(.6);transition:opacity .3s,filter .3s}
+  .live-grid-dim:hover{opacity:1;filter:saturate(1)}
+  .live-grid-dim .relic-grid{margin-top:40px}
+
+  /* ===== NEW: OATH SIGN-IN MODAL ===== */
+  .modal-backdrop{
+    position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.88);
+    display:flex;align-items:center;justify-content:center;padding:40px 20px;
+    opacity:0;pointer-events:none;transition:opacity .35s;
+    backdrop-filter:blur(6px);
+  }
+  .modal-backdrop.on{opacity:1;pointer-events:auto}
+  .modal{
+    width:100%;max-width:560px;background:#050505;border:1px solid var(--accent-soft);
+    padding:40px;display:flex;flex-direction:column;gap:24px;position:relative;
+    animation:modalIn .45s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes modalIn{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal .close{
+    position:absolute;top:14px;right:14px;width:28px;height:28px;
+    display:flex;align-items:center;justify-content:center;color:var(--ghost);
+    font-family:'Space Mono',monospace;font-size:16px;letter-spacing:0;
+  }
+  .modal .close:hover{color:var(--accent)}
+  .modal .eyebrow{color:var(--accent)}
+  .modal h2{font-family:'Inter';font-weight:900;font-size:42px;letter-spacing:-.03em;line-height:.95}
+  .modal h2 .it{color:var(--accent);font-style:italic;font-weight:400}
+  .modal p.lede{font-size:14px;line-height:1.6;color:rgba(255,255,255,.7)}
+  .modal .field{display:flex;flex-direction:column;gap:8px}
+  .modal .field label{
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--ghost);
+  }
+  .modal .field input, .modal .field textarea{
+    background:transparent;border:1px solid var(--ghost-low);color:var(--paper);
+    font-family:'Space Mono',monospace;font-size:14px;letter-spacing:.1em;
+    padding:14px 16px;outline:none;resize:none;
+    transition:border-color .2s;
+  }
+  .modal .field input:focus, .modal .field textarea:focus{border-color:var(--accent)}
+  .modal .field textarea{min-height:80px;text-transform:uppercase;letter-spacing:.15em}
+  .modal .field .hint{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--ghost);text-transform:uppercase}
+  .modal .field .hint .wrong{color:#ff6a6a}
+  .modal .field .hint .right{color:var(--accent)}
+  .modal .submit{
+    padding:18px 24px;border:1px solid var(--accent);color:var(--paper);
+    font-family:'Inter';font-weight:900;font-size:18px;letter-spacing:.12em;text-transform:uppercase;
+    display:flex;justify-content:space-between;align-items:center;
+    transition:background .2s,color .2s,opacity .2s;
+  }
+  .modal .submit::after{content:"→";color:var(--accent);font-weight:300;font-size:22px}
+  .modal .submit:hover:not([disabled]){background:var(--accent);color:#000}
+  .modal .submit:hover:not([disabled])::after{color:#000}
+  .modal .submit[disabled]{opacity:.4;border-color:var(--ghost-low)}
+  .modal .confirm{
+    display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center;padding:20px 0;
+  }
+  .modal .confirm .tick{
+    width:72px;height:72px;border:1px solid var(--accent);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:32px;
+    animation:tickIn .5s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes tickIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal .confirm h3{font-family:'Inter';font-weight:900;font-size:28px;letter-spacing:-.02em}
+  .modal .confirm p{color:rgba(255,255,255,.7);font-size:14px;line-height:1.5}
+
+  /* ===== NEW: WAITLIST MODAL ===== */
+  .wl-modal h2 .it{color:var(--accent)}
+  .wl-product{
+    display:grid;grid-template-columns:80px 1fr auto;gap:16px;align-items:center;
+    padding:16px;border:1px solid var(--ghost-low);background:rgba(255,255,255,.02);
+  }
+  .wl-product .wl-thumb{
+    width:80px;height:80px;border:1px solid var(--ghost-low);
+    background:repeating-linear-gradient(-45deg,rgba(255,255,255,.015) 0 6px,transparent 6px 14px);
+    display:flex;align-items:center;justify-content:center;filter:grayscale(1);opacity:.7;
+  }
+  .wl-product .wl-thumb svg{width:70%}
+  .wl-product .wl-info .name{font-family:'Inter';font-weight:900;font-size:18px;letter-spacing:-.02em}
+  .wl-product .wl-info .code{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--ghost);text-transform:uppercase;margin-top:4px}
+  .wl-product .wl-price{font-family:'Space Mono',monospace;font-size:14px;color:var(--accent);letter-spacing:.1em}
+  .wl-position{
+    display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;
+    padding:20px 0;border-top:1px solid var(--ghost-hair);border-bottom:1px solid var(--ghost-hair);
+  }
+  .wl-position .num{font-family:'Inter';font-weight:900;font-size:56px;letter-spacing:-.05em;color:var(--accent);line-height:.9}
+  .wl-position .num .of{color:var(--ghost);font-weight:300;font-size:24px}
+  .wl-position .txt{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em;color:rgba(255,255,255,.8);text-transform:uppercase;line-height:1.6}
+  .wl-position .txt b{color:var(--paper);font-family:'Inter';font-weight:700}
+
+  /* glitch-on HARD (short-duration waitlist glitch) */
+  html.glitch-hard{animation:glitchHard .4s steps(4) both}
+  @keyframes glitchHard{
+    0%{filter:none;transform:none}
+    15%{filter:hue-rotate(90deg) invert(1) contrast(1.3);transform:translate(-4px,2px)}
+    30%{filter:hue-rotate(-90deg);transform:translate(3px,-2px)}
+    45%{filter:invert(1);transform:translate(-2px,1px)}
+    60%{filter:none;transform:translate(2px,0)}
+    80%{filter:hue-rotate(30deg) contrast(1.2)}
+    100%{filter:none;transform:none}
+  }
+
+  /* responsive */
+  @media (max-width:1000px){
+    .hero{grid-template-columns:1fr;padding:120px 20px 40px}
+    .hero-meta,.hero-title,.hero-num,.relic-stage{grid-column:1/-1}
+    .hero-num{align-items:flex-start}
+    .hero-num .big{font-size:88px}
+    .relic-grid{grid-template-columns:repeat(2,1fr);margin:40px 20px 0}
+    .pdp{grid-template-columns:1fr}
+    .pdp-stage{min-height:70vh;border-right:none;border-bottom:1px solid var(--ghost-hair)}
+    .pdp-info{padding:40px 20px}
+    .pdp-info h1{font-size:44px}
+    .countdown-strip{grid-template-columns:1fr;gap:12px;text-align:center}
+    .countdown-strip .clock .seg{min-width:auto}
+    .manifesto{padding:80px 20px}
+    .manifesto{grid-template-columns:1fr}
+    .manifesto .bignum,.manifesto .copy,.manifesto .sig{grid-column:1/-1}
+    .manifesto .copy{font-size:28px}
+    .drops-page{padding:100px 20px 40px}
+    .drop-row .body{grid-template-columns:1fr;gap:16px;padding-left:24px}
+    .drop-row .body .idx{font-size:44px;min-width:auto}
+    .timeline::before{left:24%}
+    footer.foot{grid-template-columns:1fr;gap:16px}
+    footer .violation-list input{width:100%}
+    .cat-grid{grid-template-columns:1fr 1fr}
+    .rebel-grid{grid-template-columns:1fr}
+    .submit-strip{grid-template-columns:1fr;gap:24px}
+    .oath-tier{grid-template-columns:70px 1fr;gap:20px}
+    .oath-tier .oath-state{grid-column:1/-1;text-align:right}
+    .oath-num{font-size:56px}
+    .oath-name{font-size:24px}
+    .journal-row{grid-template-columns:1fr;gap:6px;padding:20px 0}
+    .jw{text-align:left}
+    .acct-grid{grid-template-columns:1fr}
+    .grave-row{grid-template-columns:1fr 1fr;gap:8px}
+    .nav-left{display:none}
+    body{cursor:auto}
+    .cursor,.cursor-ring{display:none}
+    .weekly-live{grid-template-columns:1fr;padding:120px 20px 40px}
+    .live-title,.live-feature,.live-banner,.live-clock{grid-column:1/-1}
+    .live-clock .pulse-num{font-size:72px}
+    .modal{padding:28px 20px}
+    .modal h2{font-size:30px}
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG filter for liquid wordmark -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="liquid">
+      <feTurbulence type="fractalNoise" baseFrequency="0.015 0.02" numOctaves="2" seed="4" result="turb">
+        <animate attributeName="baseFrequency" values="0.015 0.02;0.02 0.03;0.015 0.02" dur="8s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="turb" scale="6" id="disp"/>
+    </filter>
+    <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#b4b4b4"/>
+      <stop offset="60%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="void-grid"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<div class="reveal-gate" id="reveal-gate">
+  <div class="dot"></div>
+  <div class="hint">MOVE TO ENTER</div>
+</div>
+
+<div id="root"></div>
+
+<!-- Reservation ritual overlay -->
+<div class="ritual" id="ritual">
+  <div class="circle"></div>
+  <div class="text" id="ritual-text"></div>
+  <div class="sub" id="ritual-sub">DO NOT CLOSE THIS WINDOW</div>
+</div>
+
+<!-- Oath sign-in modal -->
+<div class="modal-backdrop" id="oath-modal" data-action="close-modal-bg">
+  <div class="modal">
+    <button class="close" data-action="close-modal" aria-label="Close">✕</button>
+    <div id="oath-form">
+      <div class="eyebrow mono" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase">THE OATH · 01 · WITNESS</div>
+      <h2 style="margin-top:12px">NOT A LOGIN.<br/><span class="it">a rank.</span></h2>
+      <p class="lede" style="margin-top:14px">Swear in to become a <b style="color:var(--paper)">WITNESS</b>. You'll get the drop letter 24 hours early, waitlist access, and comment rights in the Journal. No password. No points. Your name is your signature.</p>
+      <div class="field" style="margin-top:20px">
+        <label for="oath-name">YOUR NAME</label>
+        <input id="oath-name" type="text" placeholder="e.g. ASHER M." autocomplete="off" />
+      </div>
+      <div class="field" style="margin-top:18px">
+        <label for="oath-pledge">TYPE THE PLEDGE · EXACTLY</label>
+        <textarea id="oath-pledge" placeholder="I VIOLATE" autocomplete="off"></textarea>
+        <div class="hint" id="oath-hint">PLEDGE MUST READ <span style="color:var(--accent)">I VIOLATE</span></div>
+      </div>
+      <button class="submit" id="oath-submit" data-action="swear-in" disabled style="margin-top:22px;width:100%">SWEAR IN</button>
+    </div>
+    <div id="oath-confirmed" style="display:none">
+      <div class="confirm">
+        <div class="tick">✓</div>
+        <h3>YOU ARE NOW A <span style="color:var(--accent)">WITNESS</span></h3>
+        <p id="oath-confirm-sub">The letter comes Friday morning. Until then, hold the line.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Waitlist modal -->
+<div class="modal-backdrop" id="waitlist-modal" data-action="close-modal-bg">
+  <div class="modal wl-modal">
+    <button class="close" data-action="close-modal" aria-label="Close">✕</button>
+    <div id="wl-body">
+      <div class="eyebrow mono" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent)">SOLD OUT · WAITLIST OPEN</div>
+      <h2 style="margin-top:12px">TOO LATE. <span class="it">almost.</span></h2>
+      <p class="lede" style="margin-top:10px">This piece is reserved. You can claim a spot on the waitlist — if someone releases a reserve inside the 15-minute hold, you'll be notified in order.</p>
+      <div class="wl-product" id="wl-product" style="margin-top:18px"></div>
+      <div class="wl-position" id="wl-position" style="margin-top:20px"></div>
+      <button class="submit" data-action="claim-spot" style="margin-top:22px;width:100%">CLAIM SPOT</button>
+    </div>
+    <div id="wl-confirmed" style="display:none">
+      <div class="confirm">
+        <div class="tick">✓</div>
+        <h3>SPOT HELD IN YOUR NAME</h3>
+        <p id="wl-confirm-sub">We'll signal if the piece opens. No notification fatigue. One message, one chance.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tweaks panel -->
+<div class="tweaks-panel" id="tweaks-panel">
+  <h5>TWEAKS <span class="close" data-action="close-tweaks">✕</span></h5>
+  <div class="row">
+    <div class="k">Accent</div>
+    <div class="seg" id="tw-accent">
+      <button class="swatch" data-v="#FF2A2A" style="background:#FF2A2A"></button>
+      <button class="swatch" data-v="#00FFE5" style="background:#00FFE5"></button>
+      <button class="swatch" data-v="#FFAA00" style="background:#FFAA00"></button>
+      <button class="swatch" data-v="#7A00FF" style="background:#7A00FF"></button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="k">Oath Rank</div>
+    <div class="seg" id="tw-rank">
+      <button data-v="0">Visitor</button>
+      <button data-v="1">Witness</button>
+      <button data-v="2">Accomplice</button>
+      <button data-v="3">Rebel</button>
+      <button data-v="4">Insurgent</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="k">Countdown</div>
+    <div class="seg" id="tw-countdown">
+      <button data-v="calm">Calm</button>
+      <button data-v="blood">Blood Hour</button>
+      <button data-v="weekly">Weekly Violation</button>
+      <button data-v="live">Live</button>
+      <button data-v="sold">Sold Out</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="k">Audio Drone</div>
+    <div class="seg" id="tw-audio">
+      <button data-v="off">Off</button>
+      <button data-v="on">On</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="k">Cursor Effects</div>
+    <div class="seg" id="tw-cursor">
+      <button data-v="off">Off</button>
+      <button data-v="on">On</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="k">Easter Eggs</div>
+    <div class="seg" id="tw-eggs">
+      <button data-v="off">Off</button>
+      <button data-v="on">On</button>
+    </div>
+  </div>
+  <div class="hint">PRESS ~ TO TOGGLE · ESC TO CLOSE MODALS</div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ============ DATA ============
+  const RANKS = ["VISITOR", "WITNESS", "ACCOMPLICE", "REBEL", "INSURGENT"];
+  const RANK_COLORS = ["#666666", "#aaaaaa", "#FFAA00", "#FF2A2A", "#7A00FF"];
+
+  const PRODUCTS = [
+    { id: "01", name: "CROSS-STITCH HOODIE", price: "₹ 6,400", code: "UPARKA/001", sold: false, cat: "Uparka", shape: "HOOD",  waitlist: 47, total: 92 },
+    { id: "02", name: "LAFDA CARGO",         price: "₹ 4,800", code: "NICHEKA/014", sold: false, cat: "Nicheka", shape: "CARGO", waitlist: 22, total: 64 },
+    { id: "03", name: "GHOST WINDBREAKER",   price: "₹ 9,200", code: "UPARKA/007", sold: true,  cat: "Uparka", shape: "COAT",  waitlist: 47, total: 92 },
+    { id: "04", name: "SUTTA PENDANT",       price: "₹ 2,100", code: "LASUN/021",  sold: false, cat: "Lafda Lasun", shape: "CHARM", waitlist: 11, total: 33 },
+    { id: "05", name: "BURNT TEE",           price: "₹ 3,200", code: "UPARKA/018", sold: false, cat: "Uparka", shape: "TEE",   waitlist: 8,  total: 40 },
+    { id: "06", name: "INSURGENT MASK",      price: "₹ 1,800", code: "LASUN/033",  sold: true,  cat: "Lafda Lasun", shape: "MASK",  waitlist: 31, total: 66 },
+  ];
+
+  const DROPS = [
+    { n: "07", name: "FUN TEARS",       date: "27 APR 2026", time: "23:11 IST", note: "Monsoon orphans. 111 pieces. Red-stitched inside seam.",   count: "NEXT",    state: "upcoming", tag: "— NEXT FRIDAY —" },
+    { n: "06", name: "BLOOD STATIONERY",date: "14 MAR 2026", time: "LIVE",      note: "Desk objects for the unquiet mind. 77 pieces.",             count: "77 / 77", state: "live",     tag: "LIVE — 31 LEFT" },
+    { n: "05", name: "GHOST WEATHER",   date: "09 FEB 2026", time: "ARCHIVE",   note: "Windbreakers that remember rain. Sold out in 11 minutes.",  count: "33 / 33", state: "sold",     tag: "ARCHIVED" },
+    { n: "04", name: "LAFDA LASUN",     date: "26 JAN 2026", time: "ARCHIVE",   note: "Charms, pendants, pocket weights. Small things that speak loud.", count: "111 / 111", state: "sold", tag: "ARCHIVED" },
+    { n: "03", name: "NICHEKA S1",      date: "08 DEC 2025", time: "ARCHIVE",   note: "Bottoms for the bottom half of the city.",                   count: "77 / 77", state: "sold",     tag: "ARCHIVED" },
+    { n: "02", name: "PAPER GHOSTS",    date: "22 NOV 2025", time: "ARCHIVE",   note: "Monochrome uparka. No logos. No apologies.",                 count: "55 / 55", state: "sold",     tag: "ARCHIVED" },
+    { n: "01", name: "FIRST VIOLATION", date: "11 NOV 2025", time: "GENESIS",   note: "The room opens. Six pieces. Three minutes.",                 count: "33 / 33", state: "sold",     tag: "GENESIS" },
+  ];
+
+  const CATEGORIES = [
+    { id: "uparka",  name: "UPARKA",      hindi: "ऊपरका",  desc: "Topwear. Hoodies, jackets, tees, shirts.", count: 14, color: "#FF2A2A" },
+    { id: "nicheka", name: "NICHEKA",     hindi: "नीचेका",  desc: "Bottomwear. Cargos, pants, shorts.",        count: 8,  color: "#FFAA00" },
+    { id: "lasun",   name: "LAFDA LASUN", hindi: "लफड़ा लसुन",desc: "Accessories. Pendants, rings, masks, charms.",count: 21, color: "#7A00FF" },
+    { id: "rebels",  name: "REBELS",      hindi: "रेबल्स",   desc: "Community submissions. POD. Royalty public.",count: 37, color: "#00FFE5" },
+  ];
+
+  const REBELS = [
+    { handle: "@suhani.r",      name: "SUHANI R.",      loc: "MUMBAI",     works: 4, royalty: "24%", bio: "Maps of the city drawn inside seams." },
+    { handle: "@noor_sahani",   name: "NOOR SAHANI",    loc: "DELHI",      works: 7, royalty: "22%", bio: "Cyan-bleed graphics. Type as protest." },
+    { handle: "@ghost_lucknow", name: "GHOST",          loc: "LUCKNOW",    works: 2, royalty: "28%", bio: "Refuses to show face. Sends packages." },
+    { handle: "@vikrant.k",     name: "VIKRANT K.",     loc: "BENGALURU",  works: 5, royalty: "20%", bio: "Deconstructed cargo. Pocket archaeology." },
+    { handle: "@riya.paints",   name: "RIYA M.",        loc: "KOCHI",      works: 3, royalty: "25%", bio: "Acrylic, ink, blood orange. One-offs." },
+    { handle: "@anon_77",       name: "ANONYMOUS 77",   loc: "—",          works: 11, royalty: "30%", bio: "Never identified. Highest royalty." },
+  ];
+
+  const OATH_TIERS = [
+    { rank: 0, name: "VISITOR",    line: "You are here. That's it.",                                   unlocks: ["Browse store", "View drops", "Read Journal"] },
+    { rank: 1, name: "WITNESS",    line: "Swear in. Get the letter before the drop.",                  unlocks: ["Early heads-up (24h)", "Waitlist access", "Comment in Journal"] },
+    { rank: 2, name: "ACCOMPLICE", line: "Three drops in. You've been here.",                          unlocks: ["Early reserve (2h)", "Rebels submission rights", "Invite 3 friends"] },
+    { rank: 3, name: "REBEL",      line: "Seven drops in. You're part of the room.",                   unlocks: ["Early reserve (12h)", "Direct line to makers", "Vote on drops"] },
+    { rank: 4, name: "INSURGENT",  line: "By invitation only. You shape the next violation.",          unlocks: ["First pick on every drop", "Private IRL events", "Royalty share on curation"] },
+  ];
+
+  const JOURNAL = [
+    { n: "#014", when: "18 APR 2026", kind: "FIELD REPORT",  title: "THREE NIGHTS IN LOWER PAREL",     by: "GHOST", read: "9 MIN" },
+    { n: "#013", when: "04 APR 2026", kind: "INTERVIEW",     title: "SUHANI R. ON STITCHING MAPS",     by: "EDITOR", read: "14 MIN" },
+    { n: "#012", when: "21 MAR 2026", kind: "MANIFESTO",     title: "WHY WE DON'T DISCOUNT.",           by: "HQ",    read: "4 MIN" },
+    { n: "#011", when: "07 MAR 2026", kind: "LONG FORM",     title: "NICHEKA / ऊपरका / LAFDA LASUN",    by: "R. BOSE", read: "22 MIN" },
+    { n: "#010", when: "14 FEB 2026", kind: "FIELD REPORT",  title: "THE FLAT WE PRINTED FROM",         by: "GHOST", read: "7 MIN" },
+  ];
+
+  const GRAVEYARD = [
+    { name: "GENESIS TEE · OFF-BLACK XL", was: "₹ 3,200", now: "₹ 1,800", pieces: 2, code: "UPARKA/001-A" },
+    { name: "LAFDA RING · SILVER 20",     was: "₹ 2,800", now: "₹ 1,600", pieces: 1, code: "LASUN/014-B" },
+    { name: "GHOST CARGO · SAND M",       was: "₹ 4,800", now: "₹ 2,900", pieces: 3, code: "NICHEKA/003-C" },
+  ];
+
+  // ============ STATE ============
+  const TWEAK_DEFAULTS = {
+    accent: "#FF2A2A",
+    rank: 0,
+    countdown: "calm",
+    audio: "off",
+    cursor: "on",
+    eggs: "on",
+  };
+
+  const state = {
+    route: localStorage.getItem("violate.route") || "home",
+    currentProduct: null,
+    tweaks: (() => {
+      try {
+        const saved = localStorage.getItem("violate.tweaks");
+        return saved ? Object.assign({}, TWEAK_DEFAULTS, JSON.parse(saved)) : Object.assign({}, TWEAK_DEFAULTS);
+      } catch (e) { return Object.assign({}, TWEAK_DEFAULTS); }
+    })(),
+    pdp: { size: "M", color: "VOID" },
+    waitlistProduct: null,
+    ritualTimers: [],
+  };
+
+  const persist = () => {
+    try {
+      localStorage.setItem("violate.route", state.route);
+      localStorage.setItem("violate.tweaks", JSON.stringify(state.tweaks));
+    } catch (e) {}
+  };
+
+  const setTweak = (k, v) => {
+    state.tweaks[k] = v;
+    persist();
+    applyTweaks();
+    syncTweaksPanel();
+    // Route-level re-render if countdown state changes the home variant
+    if (k === "countdown" || k === "rank") render();
+  };
+
+  // ============ HELPERS ============
+  const el = (id) => document.getElementById(id);
+  const escapeHTML = (s) => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+
+  const stripesSVG = (label) => {
+    const id = "s-" + label.replace(/[^a-zA-Z0-9]/g, "");
+    return `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" style="width:64%;height:auto">
+      <defs>
+        <pattern id="${id}" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(-45)">
+          <rect width="6" height="6" fill="#000"/>
+          <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect x="2" y="2" width="96" height="126" fill="url(#${id})" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>
+      <text x="50" y="72" fill="rgba(255,255,255,0.45)" font-family="Space Mono, monospace" font-size="5" letter-spacing="1.5" text-anchor="middle">${escapeHTML(label)}</text>
+    </svg>`;
+  };
+
+  const wordmarkSVG = (small) => `
+    <div class="wordmark">
+      <svg width="${small?104:140}" height="${small?26:36}" viewBox="0 0 140 36">
+        <text x="0" y="28" font-family="Inter, sans-serif" font-weight="900" font-size="30" letter-spacing="-1.2" fill="#FAFAFA" filter="url(#liquid)">VIOLATE</text>
+      </svg>
+    </div>`;
+
+  // ============ COUNTDOWN ============
+  // Returns whether current time is Friday 23:11 IST or later (until Saturday 00:00 IST).
+  const isWeeklyLiveTime = () => {
+    const now = new Date();
+    // IST offset = +5:30 from UTC
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const ist = new Date(utc + (5.5 * 3600 * 1000));
+    if (ist.getDay() !== 5) return false; // 5 = Friday
+    const mins = ist.getHours() * 60 + ist.getMinutes();
+    return mins >= (23 * 60 + 11);
+  };
+
+  const effectiveCountdown = () => {
+    if (state.tweaks.countdown === "weekly") return "weekly";
+    if (state.tweaks.countdown === "live") return "live";
+    if (state.tweaks.countdown === "sold") return "sold";
+    if (state.tweaks.countdown === "blood") return "blood";
+    // calm with time-based escalation to weekly
+    if (isWeeklyLiveTime()) return "weekly";
+    return "calm";
+  };
+
+  const computeClock = () => {
+    const mode = effectiveCountdown();
+    const now = Date.now();
+    if (mode === "live" || mode === "weekly") {
+      return { d: "00", h: "00", m: "11", s: "23", label: "DROP 06 · LIVE · 31 LEFT", mode };
+    }
+    if (mode === "sold") {
+      return { d: "00", h: "00", m: "00", s: "00", label: "DROP 06 · SOLD OUT · WAITLIST OPEN", mode };
+    }
+    if (mode === "blood") {
+      const ms = 42 * 60 * 1000 - (now % (42 * 60 * 1000));
+      const m = Math.floor(ms / 60000);
+      const s = Math.floor((ms % 60000) / 1000);
+      return { d: "00", h: "00", m: String(m).padStart(2,"0"), s: String(s).padStart(2,"0"), label: "DROP 07 · UNDER 1 HOUR · HOLD THE LINE", mode };
+    }
+    const base = 4 * 24 * 3600 * 1000 + 11 * 3600 * 1000 + 23 * 60 * 1000;
+    const remain = base - (now % 1000);
+    const d = Math.floor(remain / (24 * 3600 * 1000));
+    const h = Math.floor((remain % (24 * 3600 * 1000)) / (3600 * 1000));
+    const m = Math.floor((remain % (3600 * 1000)) / 60000);
+    const s = Math.floor((remain % 60000) / 1000);
+    return { d: String(d).padStart(2,"0"), h: String(h).padStart(2,"0"), m: String(m).padStart(2,"0"), s: String(s).padStart(2,"0"), label: "DROP 07 · FUN TEARS · FRI 23:11 IST", mode };
+  };
+
+  const renderCountdownStrip = () => {
+    const c = computeClock();
+    return `<div class="countdown-strip">
+      <div class="status"><span class="dot"></span>${escapeHTML(c.label)}</div>
+      <div class="clock" id="clock-main">
+        <div class="seg" data-seg="d">${c.d}<span class="lbl">DAYS</span></div>
+        <span class="cln">:</span>
+        <div class="seg" data-seg="h">${c.h}<span class="lbl">HRS</span></div>
+        <span class="cln">:</span>
+        <div class="seg" data-seg="m">${c.m}<span class="lbl">MIN</span></div>
+        <span class="cln">:</span>
+        <div class="seg" data-seg="s">${c.s}<span class="lbl">SEC</span></div>
+      </div>
+      <div class="status">07 / 07 DROPS</div>
+    </div>`;
+  };
+
+  const tickCountdown = () => {
+    const c = computeClock();
+    // update only the seg numbers in-place (to avoid clobbering inputs / 3D state)
+    document.querySelectorAll("[data-seg]").forEach(node => {
+      const k = node.dataset.seg;
+      const label = node.querySelector(".lbl");
+      const lblHTML = label ? label.outerHTML : "";
+      node.innerHTML = c[k] + lblHTML;
+    });
+    // update live pulse digits on weekly hero
+    const pulse = el("live-pulse-num");
+    if (pulse) pulse.textContent = c.m + ":" + c.s;
+    const statusLabels = document.querySelectorAll("[data-clock-status]");
+    statusLabels.forEach(n => n.innerHTML = `<span class="dot"></span>${escapeHTML(c.label)}`);
+  };
+
+  // ============ NAV ============
+  const renderNav = () => {
+    const links = [["HOME","home"],["DROPS","drops"],["STORE","store"],["REBELS","rebels"],["OATH","oath"],["JOURNAL","journal"]];
+    const rank = state.tweaks.rank;
+    const rankColor = RANK_COLORS[rank];
+    const swear = rank === 0
+      ? `<button class="swear-cta" data-action="open-oath">SWEAR IN</button>`
+      : "";
+    return `<header class="nav">
+      <div class="nav-left">
+        ${links.map(([label,id]) => `<a href="#" data-action="nav" data-route="${id}" class="${state.route===id?"active":""}">${label}</a>`).join("")}
+      </div>
+      <a href="#" data-action="nav" data-route="home">${wordmarkSVG(false)}</a>
+      <div class="nav-right">
+        <div class="rank-chip" style="border-color:${rank>0?rankColor:""}">
+          <span style="color:${rank>0?rankColor:""}">${RANKS[rank]}</span>
+        </div>
+        ${swear}
+        <a href="#" data-action="nav" data-route="account">ACCOUNT</a>
+        <a href="#" data-action="noop">CART · 0</a>
+      </div>
+    </header>`;
+  };
+
+  // ============ FOOTER ============
+  const renderFoot = () => `<footer class="foot">
+    <div>
+      <div style="color:rgba(255,255,255,0.6);margin-bottom:8px">DROP LETTER</div>
+      <form class="violation-list" data-action="sign-letter">
+        <input type="email" placeholder="EMAIL FOR THE NEXT DROP" />
+        <button type="submit">SIGN →</button>
+      </form>
+    </div>
+    <div style="text-align:center">
+      <div class="tick">© 2026 VIOLATE SOMETHING PVT LTD</div>
+      <div style="margin-top:6px">MADE IN MUMBAI · SHIPPED WORLDWIDE</div>
+    </div>
+    <div style="text-align:right">
+      <div>INSTAGRAM · TELEGRAM · SIGNAL</div>
+      <div style="margin-top:6px">HELLO@VIOLATE.IN</div>
+      <div style="margin-top:10px"><a href="#" class="tweaks-link" data-action="toggle-tweaks">/TWEAKS</a></div>
+    </div>
+  </footer>`;
+
+  // ============ HOME (standard + weekly) ============
+  const renderHome = () => {
+    const mode = effectiveCountdown();
+    const weekly = (mode === "weekly") || (mode === "live");
+    const intro = weekly ? renderHomeWeekly() : renderHomeNormal();
+    // relic grid (dimmed in weekly mode)
+    const gridCells = PRODUCTS.map(p => `
+      <div class="cell ${p.sold?"sold":""}" data-action="open-pdp" data-pid="${p.id}">
+        <div class="num">${p.id}<span class="of"> / 06</span></div>
+        <div class="thumb">${stripesSVG(p.shape)}</div>
+        <div class="meta">
+          <div>
+            <div class="name">${escapeHTML(p.name)}</div>
+            <div style="color:rgba(255,255,255,0.4);margin-top:4px;font-size:9px">${escapeHTML(p.code)}</div>
+          </div>
+          <div class="price">${escapeHTML(p.price)}</div>
+        </div>
+      </div>`).join("");
+    const gridClass = weekly ? "live-grid-dim" : "";
+
+    return `<div class="page">
+      ${intro}
+      ${renderCountdownStrip()}
+      <div class="${gridClass}">
+        <div class="relic-grid">${gridCells}</div>
+      </div>
+      <section class="manifesto">
+        <div class="bignum">05</div>
+        <div class="copy">
+          Five things we commit to. <em>Drops, not a catalogue.</em> Rank, not coupons.
+          A Rebels portal where community gets royalty — in public. One twelve-second signature sound.
+          And every Friday at 23:11, the homepage shifts.
+        </div>
+        <div class="sig">— THE FIVE MOVES</div>
+      </section>
+      ${renderFoot()}
+    </div>`;
+  };
+
+  const renderHomeNormal = () => `
+    <section class="hero" id="hero-stage">
+      <div class="hero-meta">
+        <div class="drop-chip"><span class="blink"></span>DROP 07 / FUN TEARS · FRIDAY</div>
+        <div class="eyebrow">
+          MUMBAI · EST. 11·11·2025<br/>
+          SIX PRODUCTS, ONE DROP<br/>
+          NO RESTOCKS
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:10px">— HOW IT WORKS —</div>
+          <p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,0.72);max-width:280px">
+            One drop, every Friday at 23:11 IST. Limited pieces. You reserve — no add-to-cart.
+            Sells out or moves to the <em class="italic-red">Graveyard</em> at cost.
+          </p>
+        </div>
+      </div>
+
+      <div class="hero-title">
+        <h1>
+          A BLACK ROOM.<br/>
+          <span class="softer">six products.</span><br/>
+          ONE DROP <em class="italic-red">every</em><br/>
+          FRIDAY AT 23:11.
+        </h1>
+        <p class="lede">
+          Drop 07 opens in four days. Six pieces will appear. Each has a name, a maker, a public royalty.
+          When they're gone, the room closes until next week.
+        </p>
+      </div>
+
+      <div class="hero-num">
+        <div class="big">07<span class="slash">/</span>07</div>
+        <div class="eyebrow" style="text-align:right">DROPS SINCE<br/>GENESIS</div>
+      </div>
+
+      <div class="relic-stage" id="relic-stage">
+        <div class="relic" id="hero-relic" style="--rx:-8deg;--ry:12deg">
+          <div class="glow"></div>
+          <div class="face back"></div>
+          <div class="face left"></div>
+          <div class="face right"></div>
+          <div class="face front">
+            <div class="cipher">UPARKA/001 · 111 PCS</div>
+            <div class="label">CROSS-STITCH HOODIE · ₹ 6,400</div>
+          </div>
+        </div>
+      </div>
+    </section>`;
+
+  const renderHomeWeekly = () => {
+    const featured = PRODUCTS.find(p => !p.sold) || PRODUCTS[0];
+    const c = computeClock();
+    return `<section class="weekly-live">
+      <div class="live-banner">
+        <span class="live-dot"></span>
+        <div class="live-copy"><b>DROP 06 · LIVE</b>THE ROOM IS OPEN · 31 PIECES LEFT · HOLD THE LINE</div>
+        <div class="live-tick" id="live-pulse-num">${c.m}:${c.s}</div>
+      </div>
+
+      <div class="live-title">
+        <h1>THE ROOM <span class="live-red">is</span><br/>OPEN.</h1>
+        <p class="lede">
+          You're in the weekly violation. Reserve one piece or none — but do it now.
+          The clock is <em>alive</em>. At 00:00 it closes and the Graveyard takes what's left.
+        </p>
+      </div>
+
+      <div class="live-feature" data-action="open-pdp" data-pid="${featured.id}">
+        <div class="ft-thumb">${stripesSVG(featured.shape)}</div>
+        <div class="ft-name">${escapeHTML(featured.name)}</div>
+        <div class="ft-meta"><span>${escapeHTML(featured.code)}</span><span class="price">${escapeHTML(featured.price)}</span></div>
+        <div class="ft-reserve">RESERVE IN MY NAME</div>
+      </div>
+
+      <div class="live-clock">
+        <div>
+          <div class="pulse-num" id="live-big-clock">${c.m}:${c.s}</div>
+          <div class="label" style="margin-top:10px">MINUTES LEFT TO 00:00 IST</div>
+        </div>
+      </div>
+    </section>`;
+  };
+
+  // ============ DROPS ============
+  const renderDrops = () => {
+    const rows = DROPS.map(d => `
+      <div class="drop-row ${d.state}" data-action="nav" data-route="${d.state==="sold"?"drops":"home"}">
+        <div class="when">${escapeHTML(d.date)}<br/><span style="color:var(--accent)">${escapeHTML(d.time)}</span></div>
+        <div class="body">
+          <div class="idx">${escapeHTML(d.n)}</div>
+          <div class="detail">
+            <h3>${escapeHTML(d.name)}</h3>
+            <p>${escapeHTML(d.note)}</p>
+            <div class="tag">${escapeHTML(d.tag)}</div>
+          </div>
+          <div class="state">
+            <span class="n">${escapeHTML(d.count)}</span>
+            ${d.state==="upcoming"?"RESERVED / TOTAL":""}
+            ${d.state==="live"?"LIVE INVENTORY":""}
+            ${d.state==="sold"?"ARCHIVED":""}
+          </div>
+        </div>
+      </div>`).join("");
+    return `<div class="page">
+      <div class="drops-page">
+        <div class="drops-head">
+          <div class="title">
+            EVERY DROP<br/>
+            <span class="muted">is a room that</span><br/>
+            CLOSES BEHIND YOU.
+          </div>
+          <div class="note">
+            07 DROPS CAST<br/>
+            442 PIECES RELEASED<br/>
+            0 RESTOCKED<br/><br/>
+            SCROLL = MEMORY
+          </div>
+        </div>
+        <div class="timeline">${rows}</div>
+      </div>
+      ${renderFoot()}
+    </div>`;
+  };
+
+  // ============ STORE ============
+  let storeCat = "ALL";
+  const renderStore = () => {
+    const filtered = storeCat === "ALL" ? PRODUCTS : PRODUCTS.filter(p => p.cat.toUpperCase() === storeCat);
+    const catCards = CATEGORIES.map(c => `
+      <div class="cat-card" data-action="${c.id==="rebels"?"nav":"set-cat"}" ${c.id==="rebels"?'data-route="rebels"':`data-cat="${escapeHTML(c.name)}"`}>
+        <div class="cat-hindi" style="color:${c.color}">${c.hindi}</div>
+        <div class="cat-name">${escapeHTML(c.name)}</div>
+        <div class="cat-desc">${escapeHTML(c.desc)}</div>
+        <div class="cat-count">${String(c.count).padStart(2,"0")} ACTIVE →</div>
+      </div>`).join("");
+    const filters = ["ALL","UPARKA","NICHEKA","LAFDA LASUN"].map(k =>
+      `<button class="chip ${storeCat===k?"on":""}" data-action="set-cat" data-cat="${k}">${k}</button>`
+    ).join("");
+    const cells = filtered.map(p => `
+      <div class="cell ${p.sold?"sold":""}" data-action="open-pdp" data-pid="${p.id}">
+        <div class="num">${escapeHTML(p.code)}</div>
+        <div class="thumb">${stripesSVG(p.shape)}</div>
+        <div class="meta">
+          <div><div class="name">${escapeHTML(p.name)}</div><div style="color:rgba(255,255,255,0.4);margin-top:4px;font-size:9px">${escapeHTML(p.cat.toUpperCase())}</div></div>
+          <div class="price">${escapeHTML(p.price)}</div>
+        </div>
+      </div>`).join("");
+    return `<div class="page">
+      <div class="drops-page">
+        <div class="drops-head">
+          <div class="title">STORE<br/><span class="muted">four rooms.</span><br/>ONE <em style="color:var(--accent);font-style:italic;font-weight:400">door.</em></div>
+          <div class="note">
+            UPARKA · TOPWEAR<br/>NICHEKA · BOTTOMWEAR<br/>LAFDA LASUN · ACCESSORIES<br/>REBELS · COMMUNITY POD
+          </div>
+        </div>
+        <div class="cat-grid">${catCards}</div>
+        <div class="store-filter">${filters}</div>
+        <div class="relic-grid" style="margin-top:0">${cells}</div>
+      </div>
+      ${renderFoot()}
+    </div>`;
+  };
+
+  // ============ PDP ============
+  const renderPDP = () => {
+    const p = state.currentProduct || PRODUCTS[0];
+    const parts = p.name.split(" ");
+    const last = parts.pop();
+    const first = parts.join(" ");
+    const sizes = ["XS","S","M","L","XL"];
+    const colors = ["VOID","BURNT","GHOST","BLOOD"];
+    const sizeRow = sizes.map(s =>
+      `<button class="chip ${state.pdp.size===s?"on":""} ${s==="XS"?"out":""}" data-action="set-size" data-v="${s}">${s}</button>`
+    ).join("");
+    const colorRow = colors.map(c =>
+      `<button class="chip ${state.pdp.color===c?"on":""}" data-action="set-color" data-v="${c}">${c}</button>`
+    ).join("");
+    return `<div class="page">
+      <div class="pdp">
+        <div class="pdp-stage" id="pdp-stage">
+          <div class="count">RESERVED · 80 / 111<br/><span class="live">LIVE COUNT</span></div>
+          <div class="pdp-relic" id="pdp-relic" style="transform:rotateX(-8deg) rotateY(18deg)">
+            <div class="face back"></div>
+            <div class="face left"></div>
+            <div class="face right"></div>
+            <div class="face top"></div>
+            <div class="face front">
+              <div class="stamp"><span>${escapeHTML(p.code)}</span><span class="r">DROP 07</span></div>
+            </div>
+          </div>
+          <div class="pedestal"></div>
+          <div class="hint">DRAG TO ROTATE</div>
+        </div>
+
+        <div class="pdp-info">
+          <div class="crumb">${escapeHTML(p.cat.toUpperCase())} · SKU ${escapeHTML(p.code)} · EDITION OF 111</div>
+          <h1>${escapeHTML(first)}<br/><span class="it">${escapeHTML(last.toLowerCase())}</span></h1>
+          <div class="price">${escapeHTML(p.price)}<span style="color:rgba(255,255,255,0.4);font-size:11px;letter-spacing:.15em;margin-left:8px">INCL. TAX · GLOBAL SHIP</span></div>
+
+          <div class="variants">
+            <div>
+              <div class="label">SIZE</div>
+              <div class="variant-row">${sizeRow}</div>
+            </div>
+            <div>
+              <div class="label">COLOR</div>
+              <div class="variant-row">${colorRow}</div>
+            </div>
+          </div>
+
+          <div class="reserve">
+            <button class="btn-reserve" data-action="reserve">RESERVE IN MY NAME</button>
+            <button class="btn-aux" data-action="open-waitlist" data-pid="${p.id}">WAITLIST</button>
+          </div>
+
+          <div class="story">
+            <h4>WHY IT EXISTS</h4>
+            <p>Stitched in reverse. The cross-stitch on the inside seam traces Mohammed Ali Road at 2am, pulled from a photograph we won't show. Worn inside-out, it lies flat. Worn right-way-round, the seam presses a faint line into the skin.</p>
+            <div class="maker">
+              <span>MAKER · <b>SUHANI R.</b> MUMBAI</span>
+              <span>ROYALTY · <b style="color:var(--accent)">24%</b></span>
+            </div>
+          </div>
+
+          <div class="specs">
+            <div class="spec"><div class="k">MATERIAL</div><div class="v">420 GSM LOOPBACK</div></div>
+            <div class="spec"><div class="k">EDITION</div><div class="v">111 PIECES</div></div>
+            <div class="spec"><div class="k">SHIP</div><div class="v">FROM 05 MAY</div></div>
+            <div class="spec"><div class="k">HOLD</div><div class="v">15 MIN</div></div>
+          </div>
+        </div>
+      </div>
+      ${renderFoot()}
+    </div>`;
+  };
+
+  // ============ REBELS ============
+  const renderRebels = () => {
+    const cards = REBELS.map(r => `
+      <div class="rebel-card">
+        <div class="rebel-head">
+          <div>
+            <div class="rebel-name">${escapeHTML(r.name)}</div>
+            <div class="rebel-handle">${escapeHTML(r.handle)} · ${escapeHTML(r.loc)}</div>
+          </div>
+          <div class="rebel-royalty">${escapeHTML(r.royalty)}<span>ROYALTY</span></div>
+        </div>
+        <p class="rebel-bio">${escapeHTML(r.bio)}</p>
+        <div class="rebel-foot">
+          <span>${String(r.works).padStart(2,"0")} WORKS LIVE</span>
+          <span style="color:var(--accent)">VIEW ISLAND →</span>
+        </div>
+      </div>`).join("");
+    return `<div class="page">
+      <div class="drops-page">
+        <div class="drops-head">
+          <div class="title">REBELS<br/><span class="muted">you make it.</span><br/>WE <em style="color:var(--accent);font-style:italic;font-weight:400">sell</em> IT.</div>
+          <div class="note">
+            COMMUNITY POD<br/>PRINT-ON-DEMAND<br/>ROYALTY PAID IN PUBLIC<br/><br/>SUBMIT A VIOLATION →
+          </div>
+        </div>
+        <div class="rebel-grid">${cards}</div>
+        <div class="submit-strip">
+          <div>
+            <div class="eyebrow" style="margin-bottom:12px">SUBMIT A VIOLATION</div>
+            <h3 style="font-family:Inter;font-weight:900;font-size:48px;letter-spacing:-0.03em;line-height:.95">UPLOAD. PRICE.<br/>WE SPLIT PUBLIC.</h3>
+            <p style="margin-top:16px;font-size:14px;line-height:1.55;color:rgba(255,255,255,0.7);max-width:520px">
+              Drag a file. Set a price. Pick a royalty tier. If accepted, it ships on-demand — and the split is shown on the product page, not buried.
+            </p>
+          </div>
+          <button class="btn-reserve" data-action="noop">OPEN PORTAL</button>
+        </div>
+      </div>
+      ${renderFoot()}
+    </div>`;
+  };
+
+  // ============ OATH ============
+  const renderOath = () => {
+    const rank = state.tweaks.rank;
+    const tiers = OATH_TIERS.map(t => {
+      const isActive = t.rank === rank;
+      const isPassed = t.rank < rank;
+      const numColor = t.rank <= rank ? RANK_COLORS[t.rank] : "rgba(255,255,255,0.25)";
+      const nameColor = isActive ? RANK_COLORS[t.rank] : "";
+      const stateTxt = isPassed ? "PASSED" : isActive ? "● CURRENT" : "LOCKED";
+      const swearBtn = (t.rank === 1 && rank === 0)
+        ? `<button class="oath-swear-btn" data-action="open-oath">TYPE "I VIOLATE" TO SWEAR IN →</button>`
+        : "";
+      return `<div class="oath-tier ${isActive?"active":""} ${isPassed?"passed":""}" data-action="set-rank" data-v="${t.rank}">
+        <div class="oath-num" style="color:${numColor}">${String(t.rank).padStart(2,"0")}</div>
+        <div class="oath-body">
+          <div class="oath-name" style="${nameColor?`color:${nameColor}`:""}">${escapeHTML(t.name)}</div>
+          <div class="oath-line">${escapeHTML(t.line)}</div>
+          <ul class="oath-unlocks">${t.unlocks.map(u=>`<li>${escapeHTML(u)}</li>`).join("")}</ul>
+          ${swearBtn}
+        </div>
+        <div class="oath-state">${stateTxt}</div>
+      </div>`;
+    }).join("");
+    return `<div class="page">
+      <div class="drops-page">
+        <div class="drops-head">
+          <div class="title">THE OATH<br/><span class="muted">not a login.</span><br/>A <em style="color:var(--accent);font-style:italic;font-weight:400">rank.</em></div>
+          <div class="note">
+            NO REWARDS POINTS<br/>NO DISCOUNT CODES<br/>RANK IS EARNED · SHOWN · PERMANENT<br/><br/>
+            CURRENT: <span style="color:${RANK_COLORS[rank]}">${RANKS[rank]}</span>
+          </div>
+        </div>
+        <div class="oath-ladder">${tiers}</div>
+      </div>
+      ${renderFoot()}
+    </div>`;
+  };
+
+  // ============ JOURNAL ============
+  const renderJournal = () => {
+    const rows = JOURNAL.map(j => `
+      <a href="#" class="journal-row" data-action="noop">
+        <div class="jn">${escapeHTML(j.n)}</div>
+        <div class="jk">${escapeHTML(j.kind)}</div>
+        <div class="jt">${escapeHTML(j.title)}</div>
+        <div class="jby">${escapeHTML(j.by)} · ${escapeHTML(j.read)}</div>
+        <div class="jw">${escapeHTML(j.when)}</div>
+      </a>`).join("");
+    return `<div class="page">
+      <div class="drops-page">
+        <div class="drops-head">
+          <div class="title">JOURNAL<br/><span class="muted">the long read,</span><br/>NO <em style="color:var(--accent);font-style:italic;font-weight:400">newsletter.</em></div>
+          <div class="note">FIELD REPORTS<br/>INTERVIEWS<br/>MANIFESTOS<br/><br/>MONTHLY, AT MOST</div>
+        </div>
+        <div class="journal-grid">${rows}</div>
+      </div>
+      ${renderFoot()}
+    </div>`;
+  };
+
+  // ============ ACCOUNT ============
+  const renderAccount = () => {
+    const rank = state.tweaks.rank;
+    return `<div class="page">
+      <div class="drops-page">
+        <div class="drops-head">
+          <div class="title">ACCOUNT<br/><span class="muted">your room.</span></div>
+          <div class="note">RANK · <span style="color:${RANK_COLORS[rank]}">${RANKS[rank]}</span><br/>DROPS WITNESSED · 03<br/>PIECES OWNED · 02</div>
+        </div>
+        <div class="acct-grid">
+          <div class="acct-card"><h4>RESERVED</h4><p>Cross-stitch Hoodie · M · ships 05 May</p><p>Sutta Pendant · one size · shipped</p></div>
+          <div class="acct-card"><h4>WAITLIST</h4><p>Ghost Windbreaker · L<br/><span style="color:var(--accent)">position 14 of 92</span></p></div>
+          <div class="acct-card"><h4>ORACLE</h4><p>Next drop: Fri 23:11 IST<br/>Early reserve for Accomplice+: 21:11</p></div>
+          <div class="acct-card"><h4>ADDRESS</h4><p>Bandra West, Mumbai 400050<br/>Verified · global shipping on</p></div>
+        </div>
+      </div>
+      ${renderFoot()}
+    </div>`;
+  };
+
+  // ============ GRAVEYARD ============
+  const renderGraveyard = () => {
+    const rows = GRAVEYARD.map(g => `
+      <div class="grave-row">
+        <div class="gv-code">${escapeHTML(g.code)}</div>
+        <div class="gv-name">${escapeHTML(g.name)}</div>
+        <div class="gv-pieces">${g.pieces} LEFT</div>
+        <div class="gv-price"><span class="was">${escapeHTML(g.was)}</span>${escapeHTML(g.now)}</div>
+        <button class="btn-aux" data-action="noop">CLAIM</button>
+      </div>`).join("");
+    return `<div class="page">
+      <div class="drops-page">
+        <div class="drops-head">
+          <div class="title">GRAVEYARD<br/><span class="muted">returns, mis-sizes,</span><br/>ONE-OFFS. <em style="color:var(--accent);font-style:italic;font-weight:400">at cost.</em></div>
+          <div class="note">NO DISCOUNTS ELSEWHERE.<br/>THIS IS WHERE IT ENDS.<br/><br/>FIRST IN · FIRST OUT</div>
+        </div>
+        <div class="grave-grid">${rows}</div>
+      </div>
+      ${renderFoot()}
+    </div>`;
+  };
+
+  // ============ MAIN RENDER ============
+  const render = () => {
+    const nav = renderNav();
+    let body = "";
+    switch (state.route) {
+      case "home":      body = renderHome(); break;
+      case "drops":     body = renderDrops(); break;
+      case "store":     body = renderStore(); break;
+      case "pdp":       body = renderPDP(); break;
+      case "rebels":    body = renderRebels(); break;
+      case "oath":      body = renderOath(); break;
+      case "journal":   body = renderJournal(); break;
+      case "account":   body = renderAccount(); break;
+      case "graveyard": body = renderGraveyard(); break;
+      default:          body = renderHome();
+    }
+    el("root").innerHTML = nav + body;
+    window.scrollTo(0, 0);
+    wirePostRender();
+  };
+
+  // ============ POST-RENDER WIRING ============
+  // Track prior PDP window listeners so we can remove them on re-render.
+  let pdpListeners = null;
+  const wirePostRender = () => {
+    // Tear down any stale PDP listeners first.
+    if (pdpListeners) {
+      window.removeEventListener("mouseup", pdpListeners.onUp);
+      window.removeEventListener("mousemove", pdpListeners.onMove);
+      pdpListeners = null;
+    }
+
+    // Home parallax (scoped to the stage; dies with its element).
+    const stage = el("relic-stage");
+    const relic = el("hero-relic");
+    if (stage && relic) {
+      stage.addEventListener("mousemove", (e) => {
+        const r = stage.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width - 0.5) * 2;
+        const y = ((e.clientY - r.top) / r.height - 0.5) * 2;
+        relic.style.setProperty("--rx", `${-y * 12}deg`);
+        relic.style.setProperty("--ry", `${x * 20}deg`);
+      });
+    }
+
+    // PDP drag to rotate
+    const pdpStage = el("pdp-stage");
+    const pdpRelic = el("pdp-relic");
+    if (pdpStage && pdpRelic) {
+      let down = false, sx = 0, sy = 0, rx = -8, ry = 18;
+      const onDown = (e) => { down = true; sx = e.clientX; sy = e.clientY; };
+      const onUp = () => { down = false; };
+      const onMove = (e) => {
+        if (down) {
+          ry += (e.clientX - sx) * 0.5;
+          rx -= (e.clientY - sy) * 0.3;
+          sx = e.clientX; sy = e.clientY;
+        } else {
+          const r = pdpStage.getBoundingClientRect();
+          const x = ((e.clientX - r.left) / r.width - 0.5) * 2;
+          const y = ((e.clientY - r.top) / r.height - 0.5) * 2;
+          rx = -y * 10; ry = x * 20;
+        }
+        pdpRelic.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      };
+      pdpStage.addEventListener("mousedown", onDown);
+      window.addEventListener("mouseup", onUp);
+      window.addEventListener("mousemove", onMove);
+      pdpListeners = { onUp, onMove };
+    }
+  };
+
+  // ============ TWEAKS APPLY ============
+  const applyTweaks = () => {
+    const t = state.tweaks;
+    document.documentElement.style.setProperty("--accent", t.accent);
+    const hex = t.accent.replace("#", "");
+    const r = parseInt(hex.substring(0,2),16);
+    const g = parseInt(hex.substring(2,4),16);
+    const b = parseInt(hex.substring(4,6),16);
+    document.documentElement.style.setProperty("--accent-soft", `rgba(${r},${g},${b},0.18)`);
+
+    document.body.classList.toggle("bloodhour", t.countdown === "blood");
+    document.body.classList.toggle("oath-ringed", t.rank > 0 && t.cursor === "on");
+    const ring = el("cursor-ring");
+    if (ring) ring.style.borderColor = t.rank > 0 ? RANK_COLORS[t.rank] : t.accent;
+
+    // cursor on/off
+    const c = el("cursor");
+    if (t.cursor === "off") {
+      if (c) c.style.display = "none";
+      if (ring) ring.style.display = "none";
+      document.body.style.cursor = "auto";
+    } else {
+      if (c) c.style.display = "";
+      if (ring) ring.style.display = "";
+      document.body.style.cursor = "";
+    }
+
+    // audio drone
+    if (t.audio === "on" && !audio.ref) {
+      startDrone();
+    } else if (t.audio === "off" && audio.ref) {
+      stopDrone();
+    }
+  };
+
+  const syncTweaksPanel = () => {
+    const setActive = (groupId, value) => {
+      const group = el(groupId);
+      if (!group) return;
+      group.querySelectorAll("button").forEach(b => b.classList.toggle("on", String(b.dataset.v) === String(value)));
+    };
+    setActive("tw-accent", state.tweaks.accent);
+    setActive("tw-rank", state.tweaks.rank);
+    setActive("tw-countdown", state.tweaks.countdown);
+    setActive("tw-audio", state.tweaks.audio);
+    setActive("tw-cursor", state.tweaks.cursor);
+    setActive("tw-eggs", state.tweaks.eggs);
+  };
+
+  // ============ CURSOR TRACKER ============
+  (() => {
+    let rx = 0, ry = 0, tx = 0, ty = 0, raf;
+    const onMove = (e) => { tx = e.clientX; ty = e.clientY; };
+    const tick = () => {
+      rx += (tx - rx) * 0.25; ry += (ty - ry) * 0.25;
+      const c = el("cursor"), r = el("cursor-ring");
+      if (c) { c.style.left = tx + "px"; c.style.top = ty + "px"; }
+      if (r) { r.style.left = rx + "px"; r.style.top = ry + "px"; }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    window.addEventListener("mousemove", onMove);
+  })();
+
+  // ============ AUDIO DRONE ============
+  const audio = { ref: null };
+  const startDrone = () => {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      const ctx = new AC();
+      const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+      const o1 = ctx.createOscillator(); o1.type = "sawtooth"; o1.frequency.value = 55;
+      const o2 = ctx.createOscillator(); o2.type = "sawtooth"; o2.frequency.value = 55.7;
+      const o3 = ctx.createOscillator(); o3.type = "sine"; o3.frequency.value = 110;
+      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 400; lp.Q.value = 8;
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.07;
+      const lfoGain = ctx.createGain(); lfoGain.gain.value = 200;
+      lfo.connect(lfoGain).connect(lp.frequency);
+      o1.connect(lp); o2.connect(lp); o3.connect(lp); lp.connect(master);
+      o1.start(); o2.start(); o3.start(); lfo.start();
+      master.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 3);
+      audio.ref = { ctx, master };
+    } catch (e) { /* ignore */ }
+  };
+  const stopDrone = () => {
+    if (!audio.ref) return;
+    try {
+      const { ctx, master } = audio.ref;
+      master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
+      setTimeout(() => ctx.close(), 500);
+    } catch (e) {}
+    audio.ref = null;
+  };
+
+  // ============ EASTER EGG GLITCH (periodic) ============
+  setInterval(() => {
+    if (state.tweaks.eggs !== "on") return;
+    if (Math.random() < 0.18) {
+      document.documentElement.classList.add("glitch-on");
+      setTimeout(() => document.documentElement.classList.remove("glitch-on"), 400);
+    }
+  }, 25000);
+
+  // ============ REVEAL GATE ============
+  (() => {
+    if (document.documentElement.classList.contains("revealed")) return;
+    const reveal = () => document.documentElement.classList.add("revealed");
+    window.addEventListener("mousemove", reveal, { once: true });
+    window.addEventListener("touchstart", reveal, { once: true });
+    setTimeout(reveal, 3500);
+  })();
+
+  // ============ LINK HOVER / CURSOR-LINK ============
+  document.addEventListener("mouseover", (e) => {
+    const hit = e.target.closest("a,button,[data-action]");
+    const c = el("cursor");
+    if (c) c.classList.toggle("cursor-link", !!hit);
+  });
+  document.addEventListener("mouseout", () => {
+    const c = el("cursor");
+    if (c) c.classList.remove("cursor-link");
+  });
+
+  // ============ RITUAL OVERLAY ============
+  const runRitual = () => {
+    const rt = el("ritual"), rtText = el("ritual-text"), rtSub = el("ritual-sub");
+    state.ritualTimers.forEach(clearTimeout); state.ritualTimers = [];
+    rt.classList.add("on");
+    rtText.innerHTML = `LOCKING THE PIECE<span class="caret">_</span>`;
+    rtSub.textContent = "DO NOT CLOSE THIS WINDOW";
+    state.ritualTimers.push(setTimeout(() => {
+      rtText.innerHTML = `SEALING YOUR NAME<span class="caret">_</span>`;
+    }, 1000));
+    state.ritualTimers.push(setTimeout(() => {
+      rtText.innerHTML = `RESERVED IN YOUR NAME`;
+      rtSub.textContent = "HOLD · 15:00 · CHECK YOUR EMAIL";
+    }, 2000));
+    state.ritualTimers.push(setTimeout(() => {
+      rt.classList.remove("on");
+    }, 4200));
+  };
+
+  // ============ OATH MODAL ============
+  const openOath = () => {
+    // reset
+    el("oath-form").style.display = "";
+    el("oath-confirmed").style.display = "none";
+    const name = el("oath-name"), pledge = el("oath-pledge");
+    if (name) name.value = "";
+    if (pledge) pledge.value = "";
+    validateOath();
+    el("oath-modal").classList.add("on");
+    setTimeout(() => { if (name) name.focus(); }, 50);
+  };
+  const validateOath = () => {
+    const pledge = el("oath-pledge");
+    const hint = el("oath-hint");
+    const sub = el("oath-submit");
+    if (!pledge || !sub) return;
+    const v = (pledge.value || "").trim().toUpperCase();
+    const ok = v === "I VIOLATE";
+    const empty = v === "";
+    sub.disabled = !ok;
+    if (hint) {
+      if (empty) hint.innerHTML = `PLEDGE MUST READ <span style="color:var(--accent)">I VIOLATE</span>`;
+      else if (ok) hint.innerHTML = `<span class="right">✓ PLEDGE ACCEPTED</span>`;
+      else hint.innerHTML = `<span class="wrong">✕ NOT QUITE.</span> TYPE <span style="color:var(--accent)">I VIOLATE</span> EXACTLY`;
+    }
+  };
+  const swearIn = () => {
+    const name = (el("oath-name")?.value || "").trim() || "UNNAMED";
+    const sub = el("oath-confirm-sub");
+    if (sub) sub.textContent = `${name.toUpperCase()}, the letter comes Friday morning. Until then, hold the line.`;
+    el("oath-form").style.display = "none";
+    el("oath-confirmed").style.display = "";
+    setTweak("rank", 1);
+    // auto-close after a beat
+    setTimeout(() => { closeModals(); }, 2400);
+  };
+
+  // ============ WAITLIST MODAL ============
+  const openWaitlist = (product) => {
+    state.waitlistProduct = product;
+    // reset body
+    el("wl-body").style.display = "";
+    el("wl-confirmed").style.display = "none";
+    const prod = el("wl-product");
+    const pos = el("wl-position");
+    prod.innerHTML = `
+      <div class="wl-thumb">${stripesSVG(product.shape)}</div>
+      <div class="wl-info">
+        <div class="name">${escapeHTML(product.name)}</div>
+        <div class="code">${escapeHTML(product.code)} · ${escapeHTML(product.cat.toUpperCase())}</div>
+      </div>
+      <div class="wl-price">${escapeHTML(product.price)}</div>
+    `;
+    pos.innerHTML = `
+      <div class="num">#${product.waitlist}<span class="of"> / ${product.total}</span></div>
+      <div class="txt">YOU WOULD BE <b>SPOT ${product.waitlist}</b> OF <b>${product.total}</b>.<br/>
+      HOLD WINDOW OPENS IF A RESERVE IS RELEASED IN THE NEXT 15 MIN.<br/>
+      ONE SIGNAL. ONE CHANCE. NO SPAM.</div>
+    `;
+    el("waitlist-modal").classList.add("on");
+  };
+  const claimSpot = () => {
+    el("wl-body").style.display = "none";
+    el("wl-confirmed").style.display = "";
+    setTimeout(() => { closeModals(); }, 2400);
+  };
+
+  // ============ CLOSE ============
+  const closeModals = () => {
+    el("oath-modal").classList.remove("on");
+    el("waitlist-modal").classList.remove("on");
+  };
+
+  // ============ EVENT DELEGATION ============
+  document.addEventListener("click", (e) => {
+    const target = e.target.closest("[data-action]");
+    if (!target) return;
+    const action = target.dataset.action;
+
+    switch (action) {
+      case "nav": {
+        e.preventDefault();
+        state.route = target.dataset.route || "home";
+        persist();
+        render();
+        break;
+      }
+      case "open-pdp": {
+        const id = target.dataset.pid;
+        const p = PRODUCTS.find(pp => pp.id === id);
+        if (!p) return;
+        if (p.sold) {
+          // waitlist glitch
+          document.documentElement.classList.add("glitch-hard");
+          setTimeout(() => {
+            document.documentElement.classList.remove("glitch-hard");
+            openWaitlist(p);
+          }, 400);
+        } else {
+          state.currentProduct = p;
+          state.pdp = { size: "M", color: "VOID" };
+          state.route = "pdp";
+          persist();
+          render();
+        }
+        break;
+      }
+      case "open-waitlist": {
+        const id = target.dataset.pid;
+        const p = PRODUCTS.find(pp => pp.id === id) || state.currentProduct;
+        if (p) openWaitlist(p);
+        break;
+      }
+      case "claim-spot": {
+        claimSpot();
+        break;
+      }
+      case "reserve": {
+        runRitual();
+        break;
+      }
+      case "set-size": {
+        state.pdp.size = target.dataset.v;
+        render();
+        break;
+      }
+      case "set-color": {
+        state.pdp.color = target.dataset.v;
+        render();
+        break;
+      }
+      case "set-cat": {
+        storeCat = target.dataset.cat || "ALL";
+        render();
+        break;
+      }
+      case "set-rank": {
+        const r = parseInt(target.dataset.v, 10);
+        // Direct rank clicks from ladder: only allow if tweaks panel style or ≤ current rank.
+        // Keep original behavior — setRank(t.rank) — so the page stays demo-able.
+        setTweak("rank", r);
+        break;
+      }
+      case "open-oath": {
+        openOath();
+        break;
+      }
+      case "swear-in": {
+        swearIn();
+        break;
+      }
+      case "close-modal": {
+        closeModals();
+        break;
+      }
+      case "close-modal-bg": {
+        // Only close when the user clicked the backdrop itself, not anything inside it.
+        if (e.target === target) closeModals();
+        break;
+      }
+      case "toggle-tweaks": {
+        e.preventDefault();
+        el("tweaks-panel").classList.toggle("on");
+        break;
+      }
+      case "close-tweaks": {
+        el("tweaks-panel").classList.remove("on");
+        break;
+      }
+      case "sign-letter": /* handled by submit */ break;
+      case "noop": {
+        e.preventDefault();
+        break;
+      }
+    }
+  });
+
+  // form submission on footer newsletter
+  document.addEventListener("submit", (e) => {
+    const form = e.target.closest('form[data-action="sign-letter"]');
+    if (!form) return;
+    e.preventDefault();
+    const input = form.querySelector("input");
+    const btn = form.querySelector("button");
+    if (input) input.value = "";
+    if (btn) btn.textContent = "SIGNED";
+  });
+
+  // oath modal input events
+  document.addEventListener("input", (e) => {
+    if (e.target && (e.target.id === "oath-pledge" || e.target.id === "oath-name")) {
+      validateOath();
+    }
+  });
+
+  // tweaks panel wiring
+  const wireTweakGroup = (groupId, key, parse = v => v) => {
+    const g = el(groupId);
+    if (!g) return;
+    g.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if (!btn || !g.contains(btn)) return;
+      setTweak(key, parse(btn.dataset.v));
+    });
+  };
+  wireTweakGroup("tw-accent", "accent");
+  wireTweakGroup("tw-rank", "rank", v => parseInt(v, 10));
+  wireTweakGroup("tw-countdown", "countdown");
+  wireTweakGroup("tw-audio", "audio");
+  wireTweakGroup("tw-cursor", "cursor");
+  wireTweakGroup("tw-eggs", "eggs");
+
+  // keyboard: ~ toggles tweaks, Esc closes modals
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "`" || e.key === "~") {
+      el("tweaks-panel").classList.toggle("on");
+    }
+    if (e.key === "Escape") {
+      closeModals();
+    }
+    // Enter in oath pledge submits if valid
+    if (e.key === "Enter" && document.activeElement && document.activeElement.id === "oath-pledge") {
+      if (!el("oath-submit").disabled) {
+        e.preventDefault();
+        swearIn();
+      }
+    }
+  });
+
+  // click backdrop closes its own modal (captured via data-action="close-modal-bg" on .modal-backdrop)
+
+  // ============ COUNTDOWN TICKER ============
+  setInterval(tickCountdown, 1000);
+
+  // ============ INIT ============
+  applyTweaks();
+  syncTweaksPanel();
+  render();
+})();
+</script>
+
+</body>
+</html>
