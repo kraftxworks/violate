@@ -19,11 +19,12 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{background:var(--void);color:var(--paper);font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-weight:300;overflow-x:hidden;min-height:100vh}
-  body{cursor:none}
+  body{cursor:default}
   @media (hover:none){ body{cursor:auto} }
   a{color:inherit;text-decoration:none}
-  button{background:none;border:none;color:inherit;font:inherit;cursor:none}
+  button{background:none;border:none;color:inherit;font:inherit;cursor:pointer}
   @media (hover:none){ button{cursor:pointer} }
+  @media (hover:hover){ button{cursor:pointer} }
   .mono{font-family:'Space Mono',ui-monospace,Menlo,monospace}
   .accent{color:var(--accent)}
   .italic-red{font-style:italic;color:var(--accent)}
@@ -39,23 +40,7 @@
   }
   .revealed .void-grid{opacity:1}
 
-  /* crosshair cursor */
-  .cursor{
-    position:fixed;top:0;left:0;width:24px;height:24px;pointer-events:none;z-index:9999;
-    transform:translate(-50%,-50%);mix-blend-mode:difference;transition:opacity 200ms;
-  }
-  .cursor::before,.cursor::after{
-    content:"";position:absolute;background:#fff;
-  }
-  .cursor::before{left:50%;top:0;width:1px;height:100%;transform:translateX(-50%)}
-  .cursor::after{top:50%;left:0;height:1px;width:100%;transform:translateY(-50%)}
-  .cursor-link::before,.cursor-link::after{display:none}
-  .cursor-ring{
-    position:fixed;top:0;left:0;width:54px;height:54px;border-radius:50%;
-    border:1px solid var(--accent);pointer-events:none;z-index:9998;
-    transform:translate(-50%,-50%);opacity:0;transition:opacity 400ms,width 300ms,height 300ms,border-color 300ms;
-  }
-  .oath-ringed .cursor-ring{opacity:.7}
+  /* cursor elements removed */
 
   /* page wrapper */
   .page{position:relative;z-index:1;min-height:100vh}
@@ -113,7 +98,7 @@
   footer .violation-list input::placeholder{color:var(--ghost)}
   footer .violation-list button{color:var(--accent);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em}
   footer .tick{color:var(--paper)}
-  footer .tweaks-link{color:var(--ghost);font-size:10px;letter-spacing:.2em;cursor:none}
+  footer .tweaks-link{color:var(--ghost);font-size:10px;letter-spacing:.2em;cursor:pointer}
   footer .tweaks-link:hover{color:var(--accent)}
 
   /* ===== HOME ===== */
@@ -267,7 +252,7 @@
   }
   .drop-row{
     display:grid;grid-template-columns:17% 1fr;align-items:stretch;
-    border-top:1px solid var(--ghost-hair);padding:48px 0;position:relative;cursor:none;
+    border-top:1px solid var(--ghost-hair);padding:48px 0;position:relative;
     transition:background .4s;
   }
   .drop-row:hover{background:rgba(255,42,42,.03)}
@@ -515,7 +500,7 @@
   }
   .tweaks-panel.on{display:flex}
   .tweaks-panel h5{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);font-weight:400;display:flex;justify-content:space-between;align-items:center}
-  .tweaks-panel h5 .close{color:var(--ghost);cursor:none}
+  .tweaks-panel h5 .close{color:var(--ghost);cursor:pointer}
   .tweaks-panel .row{display:flex;flex-direction:column;gap:6px}
   .tweaks-panel .row .k{color:var(--ghost);text-transform:uppercase;letter-spacing:.2em;font-size:9px}
   .tweaks-panel .seg{display:flex;gap:4px;flex-wrap:wrap}
@@ -739,12 +724,77 @@
     .grave-row{grid-template-columns:1fr 1fr;gap:8px}
     .nav-left{display:none}
     body{cursor:auto}
-    .cursor,.cursor-ring{display:none}
     .weekly-live{grid-template-columns:1fr;padding:120px 20px 40px}
     .live-title,.live-feature,.live-banner,.live-clock{grid-column:1/-1}
     .live-clock .pulse-num{font-size:72px}
     .modal{padding:28px 20px}
     .modal h2{font-size:30px}
+  }
+
+  /* ===== VOID HERO ===== */
+  .hero-void{position:relative;display:block;padding:0;min-height:100vh;overflow:hidden}
+  .hero-void canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .hero-void .void-overlay{position:absolute;inset:0;pointer-events:none;z-index:2}
+  .hero-void .void-overlay .hero-tagline{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    font-family:'Inter',sans-serif;font-weight:900;font-size:min(8vw,72px);
+    letter-spacing:-.02em;text-align:center;white-space:nowrap;
+    text-shadow:0 0 40px rgba(0,0,0,.8);
+  }
+  .hero-void .void-overlay .void-product-ui{
+    position:absolute;bottom:52px;left:32px;max-width:60vw;
+  }
+  .hero-void .drops-strip{
+    position:absolute;top:22px;right:32px;font-family:'Space Mono',monospace;
+    font-size:10px;letter-spacing:.25em;color:var(--ghost);text-transform:uppercase;
+  }
+  .void-scroll-hint{
+    position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+    font-family:'Space Mono',monospace;font-size:9px;letter-spacing:4px;opacity:.45;
+    animation:bob 2s infinite;z-index:2;pointer-events:none;
+  }
+  .hero-void .void-left-meta{
+    position:absolute;bottom:52px;right:32px;text-align:right;
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;
+    color:var(--ghost);text-transform:uppercase;line-height:2;
+  }
+  .hero-void-fallback{
+    position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;
+    font-family:'Space Mono',monospace;font-size:12px;color:var(--ghost);letter-spacing:.2em;
+  }
+
+  /* ===== PRODUCT IMAGE PLACEHOLDERS ===== */
+  .img-placeholder{
+    width:100%;background:#0a0a0a;border:1px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);
+    letter-spacing:.15em;text-transform:uppercase;
+  }
+  .img-placeholder.ar-4-5{aspect-ratio:4/5}
+  .img-placeholder.ar-16-9{aspect-ratio:16/9}
+  .img-placeholder.ar-1-1{aspect-ratio:1/1}
+  .img-placeholder.ar-21-9{aspect-ratio:21/9}
+
+  /* ===== MANIFESTO BULLETS ===== */
+  .manifesto-list{list-style:none;display:flex;flex-direction:column;gap:12px;margin-top:16px}
+  .manifesto-list li{font-size:22px;font-weight:300;line-height:1.3;color:rgba(255,255,255,.85)}
+  .manifesto-list li::before{content:"— ";color:var(--accent)}
+
+  /* ===== JOURNAL TEASER ===== */
+  .journal-teaser{padding:80px 32px;border-top:1px solid var(--ghost-hair)}
+  .journal-teaser h3{font-family:'Inter';font-weight:900;font-size:28px;letter-spacing:-.02em;margin-bottom:24px}
+
+  /* ===== REBELS PREVIEW ===== */
+  .rebels-preview{padding:80px 32px;border-top:1px solid var(--ghost-hair)}
+  .rebels-preview h3{font-family:'Inter';font-weight:900;font-size:28px;letter-spacing:-.02em;margin-bottom:24px}
+  .rebels-preview-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+
+  /* ===== FOOTER STRIP ===== */
+  .footer-strip{padding:0 32px;border-top:1px solid var(--ghost-hair)}
+
+  @media (prefers-reduced-motion:reduce){
+    .hero-void canvas{display:none}
+    .hero-void-fallback{display:flex}
   }
 </style>
 </head>
@@ -769,8 +819,6 @@
 </svg>
 
 <div class="void-grid"></div>
-<div class="cursor" id="cursor"></div>
-<div class="cursor-ring" id="cursor-ring"></div>
 
 <div class="reveal-gate" id="reveal-gate">
   <div class="dot"></div>
@@ -791,17 +839,17 @@
   <div class="modal">
     <button class="close" data-action="close-modal" aria-label="Close">✕</button>
     <div id="oath-form">
+      <div class="img-placeholder ar-1-1" style="max-width:200px;margin:0 auto 16px">TAG / LABEL MACRO</div>
       <div class="eyebrow mono" style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase">THE OATH · 01 · WITNESS</div>
       <h2 style="margin-top:12px">NOT A LOGIN.<br/><span class="it">a rank.</span></h2>
-      <p class="lede" style="margin-top:14px">Swear in to become a <b style="color:var(--paper)">WITNESS</b>. You'll get the drop letter 24 hours early, waitlist access, and comment rights in the Journal. No password. No points. Your name is your signature.</p>
+      <p class="lede" style="margin-top:14px">Swear in to become a <b style="color:var(--paper)">WITNESS</b>. You'll get the drop letter 24 hours early, waitlist access, and comment rights in the Journal.</p>
       <div class="field" style="margin-top:20px">
         <label for="oath-name">YOUR NAME</label>
         <input id="oath-name" type="text" placeholder="e.g. ASHER M." autocomplete="off" />
       </div>
       <div class="field" style="margin-top:18px">
-        <label for="oath-pledge">TYPE THE PLEDGE · EXACTLY</label>
-        <textarea id="oath-pledge" placeholder="I VIOLATE" autocomplete="off"></textarea>
-        <div class="hint" id="oath-hint">PLEDGE MUST READ <span style="color:var(--accent)">I VIOLATE</span></div>
+        <label for="oath-email">YOUR EMAIL</label>
+        <input id="oath-email" type="email" placeholder="YOU@EXAMPLE.COM" autocomplete="off" />
       </div>
       <button class="submit" id="oath-submit" data-action="swear-in" disabled style="margin-top:22px;width:100%">SWEAR IN</button>
     </div>
@@ -893,6 +941,7 @@
   <div class="hint">PRESS ~ TO TOGGLE · ESC TO CLOSE MODALS</div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (() => {
   "use strict";
@@ -964,7 +1013,7 @@
     rank: 0,
     countdown: "calm",
     audio: "off",
-    cursor: "on",
+    cursor: "off",
     eggs: "on",
   };
 
@@ -1021,6 +1070,7 @@
       <svg width="${small?104:140}" height="${small?26:36}" viewBox="0 0 140 36">
         <text x="0" y="28" font-family="Inter, sans-serif" font-weight="900" font-size="30" letter-spacing="-1.2" fill="#FAFAFA" filter="url(#liquid)">VIOLATE</text>
       </svg>
+      ${small?'':`<div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.15em;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:2px">Limited streetwear. Mumbai made.</div>`}
     </div>`;
 
   // ============ COUNTDOWN ============
@@ -1155,19 +1205,14 @@
     const gridCells = PRODUCTS.map(p => `
       <div class="cell ${p.sold?"sold":""}" data-action="open-pdp" data-pid="${p.id}">
         <div class="num">${p.id}<span class="of"> / 06</span></div>
-        <div class="thumb">${stripesSVG(p.shape)}</div>
-        <div class="meta">
-          <div>
-            <div class="name">${escapeHTML(p.name)}</div>
-            <div style="color:rgba(255,255,255,0.4);margin-top:4px;font-size:9px">${escapeHTML(p.code)}</div>
-          </div>
-          <div class="price">${escapeHTML(p.price)}</div>
-        </div>
+        <div class="thumb"><div class="img-placeholder ar-4-5">${escapeHTML(p.name)}</div></div>
+        <div class="meta"><span class="name" style="font-size:10px">${escapeHTML(p.name)} · ${escapeHTML(p.price)} · 111 PIECES · ${escapeHTML(p.code)}</span></div>
       </div>`).join("");
     const gridClass = weekly ? "live-grid-dim" : "";
 
     return `<div class="page">
       ${intro}
+      <div class="footer-strip"><div class="img-placeholder ar-16-9">ATMOSPHERIC · MUMBAI NIGHT / STUDIO FABRIC</div></div>
       ${renderCountdownStrip()}
       <div class="${gridClass}">
         <div class="relic-grid">${gridCells}</div>
@@ -1175,64 +1220,48 @@
       <section class="manifesto">
         <div class="bignum">05</div>
         <div class="copy">
-          Five things we commit to. <em>Drops, not a catalogue.</em> Rank, not coupons.
-          A Rebels portal where community gets royalty — in public. One twelve-second signature sound.
-          And every Friday at 23:11, the homepage shifts.
+          <ul class="manifesto-list">
+            <li>Drops, not a catalogue.</li>
+            <li>Ranks, not coupons.</li>
+            <li>Community designers. Royalty shown.</li>
+            <li>A signature sound.</li>
+            <li>The homepage shifts every Friday.</li>
+          </ul>
         </div>
         <div class="sig">— THE FIVE MOVES</div>
       </section>
+      <section class="journal-teaser">
+        <h3>JOURNAL</h3>
+        <div class="img-placeholder ar-16-9" style="max-width:600px">JOURNAL TEASER · LATEST POST</div>
+        <p style="margin-top:12px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--ghost);text-transform:uppercase">THREE NIGHTS IN LOWER PAREL — 9 MIN READ</p>
+      </section>
+      <section class="rebels-preview">
+        <h3>REBELS</h3>
+        <div class="rebels-preview-grid">
+          ${REBELS.slice(0,6).map(r => '<div class="img-placeholder ar-1-1">' + escapeHTML(r.name) + '</div>').join('')}
+        </div>
+      </section>
+      <div class="footer-strip"><div class="img-placeholder ar-21-9">MAKING-OF / PACKAGING</div></div>
       ${renderFoot()}
     </div>`;
   };
 
   const renderHomeNormal = () => `
-    <section class="hero" id="hero-stage">
-      <div class="hero-meta">
-        <div class="drop-chip"><span class="blink"></span>DROP 07 / FUN TEARS · FRIDAY</div>
-        <div class="eyebrow">
-          MUMBAI · EST. 11·11·2025<br/>
-          SIX PRODUCTS, ONE DROP<br/>
-          NO RESTOCKS
+    <section class="hero-void" id="hero-stage">
+      <canvas id="void-canvas"></canvas>
+      <div class="hero-void-fallback" style="display:none">VIOLATE · THE VOID</div>
+      <div class="void-overlay">
+        <div class="hero-tagline">SIX PIECES. EVERY FRIDAY. 23:11 IST.</div>
+        <div class="drops-strip">DROPS 07</div>
+        <div class="void-product-ui">
+          <div id="void-num" style="font-family:Inter,sans-serif;font-weight:100;font-size:150px;line-height:.82;letter-spacing:-4px;opacity:.55">01</div>
+          <div id="void-name" style="font-family:Inter,sans-serif;font-weight:900;font-size:clamp(36px,5.8vw,78px);line-height:1;letter-spacing:-2px;margin-top:14px">CROSS-STITCH HOODIE</div>
+          <div id="void-price" style="font-family:'Space Mono',monospace;color:var(--accent);font-size:12px;letter-spacing:3px;margin-top:16px">₹ 6,400 · LIMITED 111</div>
+          <button style="display:inline-block;margin-top:22px;padding:11px 26px;border:1.5px solid #fff;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:4px;pointer-events:auto;transition:0.2s;background:none;color:#fff" data-action="open-pdp" data-pid="01" id="void-reserve-btn">RESERVE</button>
         </div>
-        <div>
-          <div class="eyebrow" style="margin-bottom:10px">— HOW IT WORKS —</div>
-          <p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,0.72);max-width:280px">
-            One drop, every Friday at 23:11 IST. Limited pieces. You reserve — no add-to-cart.
-            Sells out or moves to the <em class="italic-red">Graveyard</em> at cost.
-          </p>
-        </div>
+        <div class="void-left-meta">MUMBAI · 2025<br/>NO RESTOCKS</div>
       </div>
-
-      <div class="hero-title">
-        <h1>
-          A BLACK ROOM.<br/>
-          <span class="softer">six products.</span><br/>
-          ONE DROP <em class="italic-red">every</em><br/>
-          FRIDAY AT 23:11.
-        </h1>
-        <p class="lede">
-          Drop 07 opens in four days. Six pieces will appear. Each has a name, a maker, a public royalty.
-          When they're gone, the room closes until next week.
-        </p>
-      </div>
-
-      <div class="hero-num">
-        <div class="big">07<span class="slash">/</span>07</div>
-        <div class="eyebrow" style="text-align:right">DROPS SINCE<br/>GENESIS</div>
-      </div>
-
-      <div class="relic-stage" id="relic-stage">
-        <div class="relic" id="hero-relic" style="--rx:-8deg;--ry:12deg">
-          <div class="glow"></div>
-          <div class="face back"></div>
-          <div class="face left"></div>
-          <div class="face right"></div>
-          <div class="face front">
-            <div class="cipher">UPARKA/001 · 111 PCS</div>
-            <div class="label">CROSS-STITCH HOODIE · ₹ 6,400</div>
-          </div>
-        </div>
-      </div>
+      <div class="void-scroll-hint">SCROLL TO REVEAL ↓</div>
     </section>`;
 
   const renderHomeWeekly = () => {
@@ -1254,7 +1283,7 @@
       </div>
 
       <div class="live-feature" data-action="open-pdp" data-pid="${featured.id}">
-        <div class="ft-thumb">${stripesSVG(featured.shape)}</div>
+        <div class="ft-thumb"><div class="img-placeholder ar-4-5">${escapeHTML(featured.name)}</div></div>
         <div class="ft-name">${escapeHTML(featured.name)}</div>
         <div class="ft-meta"><span>${escapeHTML(featured.code)}</span><span class="price">${escapeHTML(featured.price)}</span></div>
         <div class="ft-reserve">RESERVE IN MY NAME</div>
@@ -1327,11 +1356,8 @@
     const cells = filtered.map(p => `
       <div class="cell ${p.sold?"sold":""}" data-action="open-pdp" data-pid="${p.id}">
         <div class="num">${escapeHTML(p.code)}</div>
-        <div class="thumb">${stripesSVG(p.shape)}</div>
-        <div class="meta">
-          <div><div class="name">${escapeHTML(p.name)}</div><div style="color:rgba(255,255,255,0.4);margin-top:4px;font-size:9px">${escapeHTML(p.cat.toUpperCase())}</div></div>
-          <div class="price">${escapeHTML(p.price)}</div>
-        </div>
+        <div class="thumb"><div class="img-placeholder ar-4-5">${escapeHTML(p.name)}</div></div>
+        <div class="meta"><span class="name" style="font-size:10px">${escapeHTML(p.name)} · ${escapeHTML(p.price)} · 111 PIECES · ${escapeHTML(p.code)}</span></div>
       </div>`).join("");
     return `<div class="page">
       <div class="drops-page">
@@ -1473,7 +1499,7 @@
       const nameColor = isActive ? RANK_COLORS[t.rank] : "";
       const stateTxt = isPassed ? "PASSED" : isActive ? "● CURRENT" : "LOCKED";
       const swearBtn = (t.rank === 1 && rank === 0)
-        ? `<button class="oath-swear-btn" data-action="open-oath">TYPE "I VIOLATE" TO SWEAR IN →</button>`
+        ? `<button class="oath-swear-btn" data-action="open-oath">SWEAR IN →</button>`
         : "";
       return `<div class="oath-tier ${isActive?"active":""} ${isPassed?"passed":""}" data-action="set-rank" data-v="${t.rank}">
         <div class="oath-num" style="color:${numColor}">${String(t.rank).padStart(2,"0")}</div>
@@ -1586,28 +1612,234 @@
     wirePostRender();
   };
 
+  // ============ THREE.JS VOID SCENE ============
+  let voidCleanup = null;
+  const VOID_PRODUCTS = [
+    { name: 'CROSS-STITCH HOODIE', price: '₹ 6,400 · LIMITED 111', color: 0xff2a2a, shape: 'knot',   z: -5,  num: '01', pid: '01' },
+    { name: 'LAFDA CARGO',         price: '₹ 4,800 · LIMITED 64',  color: 0x00ffe5, shape: 'ico',    z: -20, num: '02', pid: '02' },
+    { name: 'GHOST WINDBREAKER',   price: '₹ 9,200 · LIMITED 92',  color: 0xffaa00, shape: 'sphere', z: -35, num: '03', pid: '03' },
+    { name: 'SUTTA PENDANT',       price: '₹ 2,100 · LIMITED 33',  color: 0x7a00ff, shape: 'torus',  z: -50, num: '04', pid: '04' },
+    { name: 'BURNT TEE',           price: '₹ 3,200 · LIMITED 40',  color: 0xffffff, shape: 'octa',   z: -65, num: '05', pid: '05' },
+    { name: 'INSURGENT MASK',      price: '₹ 1,800 · LIMITED 66',  color: 0xff4488, shape: 'cube',   z: -80, num: '06', pid: '06' },
+  ];
+
+  const initVoidScene = (canvas) => {
+    if (typeof THREE === 'undefined') return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const heroSection = canvas.parentElement;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    scene.fog = new THREE.Fog(0x000000, 15, 95);
+
+    const camera = new THREE.PerspectiveCamera(48, canvas.clientWidth / canvas.clientHeight, 0.1, 220);
+    camera.position.set(0, 1.7, 8);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+
+    // Ground
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(240, 240),
+      new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.92, metalness: 0.1 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.02;
+    scene.add(ground);
+
+    // Grid
+    const grid = new THREE.GridHelper(240, 120, 0x666666, 0x262626);
+    grid.material.transparent = true;
+    grid.material.opacity = 0.55;
+    grid.material.depthWrite = false;
+    scene.add(grid);
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.06));
+    const rim1 = new THREE.DirectionalLight(0xff2a2a, 0.35);
+    rim1.position.set(6, 4, 3);
+    scene.add(rim1);
+    const rim2 = new THREE.DirectionalLight(0x00ffe5, 0.25);
+    rim2.position.set(-6, 4, -3);
+    scene.add(rim2);
+
+    // Glow sprite helper
+    function glowSprite(color, scale, y, z) {
+      const c = document.createElement('canvas'); c.width = c.height = 256;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(128, 128, 4, 128, 128, 120);
+      const col = new THREE.Color(color);
+      const r = Math.round(col.r * 255), gg = Math.round(col.g * 255), b = Math.round(col.b * 255);
+      g.addColorStop(0, 'rgba(' + r + ',' + gg + ',' + b + ',0.85)');
+      g.addColorStop(0.5, 'rgba(' + r + ',' + gg + ',' + b + ',0.22)');
+      g.addColorStop(1, 'rgba(' + r + ',' + gg + ',' + b + ',0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+      const tex = new THREE.CanvasTexture(c);
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+      const s = new THREE.Sprite(mat);
+      s.scale.set(scale, scale, 1);
+      s.position.set(0, y, z);
+      return s;
+    }
+
+    // Floor disc helper
+    function floorDisc(color, size, z) {
+      const c = document.createElement('canvas'); c.width = c.height = 256;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(128, 128, 4, 128, 128, 125);
+      const col = new THREE.Color(color);
+      const r = Math.round(col.r * 255), gg = Math.round(col.g * 255), b = Math.round(col.b * 255);
+      g.addColorStop(0, 'rgba(' + r + ',' + gg + ',' + b + ',0.5)');
+      g.addColorStop(0.6, 'rgba(' + r + ',' + gg + ',' + b + ',0.08)');
+      g.addColorStop(1, 'rgba(' + r + ',' + gg + ',' + b + ',0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+      const tex = new THREE.CanvasTexture(c);
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);
+      m.rotation.x = -Math.PI / 2;
+      m.position.set(0, 0.002, z);
+      return m;
+    }
+
+    // Products
+    const items = [];
+    VOID_PRODUCTS.forEach(p => {
+      let geo;
+      if (p.shape === 'knot') geo = new THREE.TorusKnotGeometry(0.7, 0.22, 128, 16);
+      else if (p.shape === 'ico') geo = new THREE.IcosahedronGeometry(0.9, 0);
+      else if (p.shape === 'sphere') geo = new THREE.SphereGeometry(0.85, 48, 48);
+      else if (p.shape === 'torus') geo = new THREE.TorusGeometry(0.7, 0.24, 24, 64);
+      else if (p.shape === 'octa') geo = new THREE.OctahedronGeometry(0.95, 0);
+      else geo = new THREE.BoxGeometry(1.1, 1.1, 1.1);
+
+      const mat = new THREE.MeshStandardMaterial({
+        color: p.color, emissive: p.color, emissiveIntensity: 1.3,
+        metalness: 0.5, roughness: 0.35
+      });
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(0, 1.7, p.z);
+      m.userData = p;
+      scene.add(m);
+      items.push(m);
+
+      const pl = new THREE.PointLight(p.color, 1.6, 8);
+      pl.position.set(0, 1.7, p.z);
+      scene.add(pl);
+
+      scene.add(glowSprite(p.color, 5.2, 1.7, p.z + 0.01));
+      scene.add(floorDisc(p.color, 5.5, p.z));
+    });
+
+    // Scroll dolly
+    let scrollZ = 0, targetZ = 0;
+    const onWheel = (e) => {
+      e.preventDefault();
+      targetZ += e.deltaY * 0.015;
+      targetZ = Math.max(0, Math.min(86, targetZ));
+    };
+    heroSection.addEventListener('wheel', onWheel, { passive: false });
+
+    let mx = 0, my = 0;
+    const onMouseMove = (e) => {
+      mx = (e.clientX / innerWidth - 0.5);
+      my = (e.clientY / innerHeight - 0.5);
+    };
+    window.addEventListener('mousemove', onMouseMove);
+
+    // UI refs
+    const lookNum = el('void-num');
+    const lookName = el('void-name');
+    const lookPrice = el('void-price');
+    const reserveBtn = el('void-reserve-btn');
+
+    let t = 0;
+    let animId = null;
+    let disposed = false;
+    function animate() {
+      if (disposed) return;
+      animId = requestAnimationFrame(animate);
+      t += 0.01;
+      scrollZ += (targetZ - scrollZ) * 0.06;
+      camera.position.z = 8 - scrollZ;
+      camera.position.x = mx * 0.8;
+      camera.position.y = 1.7 - my * 0.3;
+      camera.lookAt(mx * 0.4, 1.6, camera.position.z - 5);
+
+      if (!reducedMotion) {
+        items.forEach((m, i) => {
+          m.rotation.y = t * 0.3 + i;
+          m.rotation.x = t * 0.18 + i * 0.4;
+          m.position.y = 1.7 + Math.sin(t + i) * 0.13;
+        });
+      }
+
+      // Closest product drives UI
+      let closest = null, closestDist = Infinity;
+      items.forEach(m => {
+        const dz = camera.position.z - m.position.z;
+        if (dz > 0 && dz < closestDist) { closestDist = dz; closest = m.userData; }
+      });
+      if (closest && lookName && lookName.textContent !== closest.name) {
+        if (lookNum) lookNum.textContent = closest.num;
+        lookName.textContent = closest.name;
+        if (lookPrice) lookPrice.textContent = closest.price;
+        if (reserveBtn) reserveBtn.dataset.pid = closest.pid;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    // Resize handler
+    const onResize = () => {
+      if (disposed) return;
+      const w = heroSection.clientWidth;
+      const h = heroSection.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    window.addEventListener('resize', onResize);
+
+    if (reducedMotion) {
+      // Render one static frame
+      renderer.render(scene, camera);
+    } else {
+      animate();
+    }
+
+    // Return cleanup
+    return () => {
+      disposed = true;
+      if (animId) cancelAnimationFrame(animId);
+      heroSection.removeEventListener('wheel', onWheel);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('resize', onResize);
+      renderer.dispose();
+    };
+  };
+
   // ============ POST-RENDER WIRING ============
   // Track prior PDP window listeners so we can remove them on re-render.
   let pdpListeners = null;
   const wirePostRender = () => {
-    // Tear down any stale PDP listeners first.
+    // Tear down any stale void scene.
+    if (voidCleanup) { voidCleanup(); voidCleanup = null; }
+    // Tear down any stale PDP listeners.
     if (pdpListeners) {
       window.removeEventListener("mouseup", pdpListeners.onUp);
       window.removeEventListener("mousemove", pdpListeners.onMove);
       pdpListeners = null;
     }
 
-    // Home parallax (scoped to the stage; dies with its element).
-    const stage = el("relic-stage");
-    const relic = el("hero-relic");
-    if (stage && relic) {
-      stage.addEventListener("mousemove", (e) => {
-        const r = stage.getBoundingClientRect();
-        const x = ((e.clientX - r.left) / r.width - 0.5) * 2;
-        const y = ((e.clientY - r.top) / r.height - 0.5) * 2;
-        relic.style.setProperty("--rx", `${-y * 12}deg`);
-        relic.style.setProperty("--ry", `${x * 20}deg`);
-      });
+    // Three.js void hero (lazy-loaded after initial paint)
+    const voidCanvas = el("void-canvas");
+    if (voidCanvas) {
+      const initFn = () => { voidCleanup = initVoidScene(voidCanvas); };
+      if ('requestIdleCallback' in window) requestIdleCallback(initFn);
+      else setTimeout(initFn, 0);
     }
 
     // PDP drag to rotate
@@ -1648,21 +1880,7 @@
     document.documentElement.style.setProperty("--accent-soft", `rgba(${r},${g},${b},0.18)`);
 
     document.body.classList.toggle("bloodhour", t.countdown === "blood");
-    document.body.classList.toggle("oath-ringed", t.rank > 0 && t.cursor === "on");
-    const ring = el("cursor-ring");
-    if (ring) ring.style.borderColor = t.rank > 0 ? RANK_COLORS[t.rank] : t.accent;
-
-    // cursor on/off
-    const c = el("cursor");
-    if (t.cursor === "off") {
-      if (c) c.style.display = "none";
-      if (ring) ring.style.display = "none";
-      document.body.style.cursor = "auto";
-    } else {
-      if (c) c.style.display = "";
-      if (ring) ring.style.display = "";
-      document.body.style.cursor = "";
-    }
+    // cursor effects removed — always default cursor
 
     // audio drone
     if (t.audio === "on" && !audio.ref) {
@@ -1686,20 +1904,7 @@
     setActive("tw-eggs", state.tweaks.eggs);
   };
 
-  // ============ CURSOR TRACKER ============
-  (() => {
-    let rx = 0, ry = 0, tx = 0, ty = 0, raf;
-    const onMove = (e) => { tx = e.clientX; ty = e.clientY; };
-    const tick = () => {
-      rx += (tx - rx) * 0.25; ry += (ty - ry) * 0.25;
-      const c = el("cursor"), r = el("cursor-ring");
-      if (c) { c.style.left = tx + "px"; c.style.top = ty + "px"; }
-      if (r) { r.style.left = rx + "px"; r.style.top = ry + "px"; }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    window.addEventListener("mousemove", onMove);
-  })();
+  // cursor tracker removed
 
   // ============ AUDIO DRONE ============
   const audio = { ref: null };
@@ -1750,16 +1955,7 @@
     setTimeout(reveal, 3500);
   })();
 
-  // ============ LINK HOVER / CURSOR-LINK ============
-  document.addEventListener("mouseover", (e) => {
-    const hit = e.target.closest("a,button,[data-action]");
-    const c = el("cursor");
-    if (c) c.classList.toggle("cursor-link", !!hit);
-  });
-  document.addEventListener("mouseout", () => {
-    const c = el("cursor");
-    if (c) c.classList.remove("cursor-link");
-  });
+  // cursor-link handlers removed
 
   // ============ RITUAL OVERLAY ============
   const runRitual = () => {
@@ -1785,27 +1981,21 @@
     // reset
     el("oath-form").style.display = "";
     el("oath-confirmed").style.display = "none";
-    const name = el("oath-name"), pledge = el("oath-pledge");
+    const name = el("oath-name"), email = el("oath-email");
     if (name) name.value = "";
-    if (pledge) pledge.value = "";
+    if (email) email.value = "";
     validateOath();
     el("oath-modal").classList.add("on");
     setTimeout(() => { if (name) name.focus(); }, 50);
   };
   const validateOath = () => {
-    const pledge = el("oath-pledge");
-    const hint = el("oath-hint");
+    const name = el("oath-name");
+    const email = el("oath-email");
     const sub = el("oath-submit");
-    if (!pledge || !sub) return;
-    const v = (pledge.value || "").trim().toUpperCase();
-    const ok = v === "I VIOLATE";
-    const empty = v === "";
-    sub.disabled = !ok;
-    if (hint) {
-      if (empty) hint.innerHTML = `PLEDGE MUST READ <span style="color:var(--accent)">I VIOLATE</span>`;
-      else if (ok) hint.innerHTML = `<span class="right">✓ PLEDGE ACCEPTED</span>`;
-      else hint.innerHTML = `<span class="wrong">✕ NOT QUITE.</span> TYPE <span style="color:var(--accent)">I VIOLATE</span> EXACTLY`;
-    }
+    if (!sub) return;
+    const nameOk = (name?.value || "").trim().length > 0;
+    const emailOk = (email?.value || "").trim().includes("@");
+    sub.disabled = !(nameOk && emailOk);
   };
   const swearIn = () => {
     const name = (el("oath-name")?.value || "").trim() || "UNNAMED";
@@ -1827,7 +2017,7 @@
     const prod = el("wl-product");
     const pos = el("wl-position");
     prod.innerHTML = `
-      <div class="wl-thumb">${stripesSVG(product.shape)}</div>
+      <div class="wl-thumb"><div class="img-placeholder ar-1-1" style="width:80px;height:80px">${escapeHTML(product.name)}</div></div>
       <div class="wl-info">
         <div class="name">${escapeHTML(product.name)}</div>
         <div class="code">${escapeHTML(product.code)} · ${escapeHTML(product.cat.toUpperCase())}</div>
@@ -1971,7 +2161,7 @@
 
   // oath modal input events
   document.addEventListener("input", (e) => {
-    if (e.target && (e.target.id === "oath-pledge" || e.target.id === "oath-name")) {
+    if (e.target && (e.target.id === "oath-email" || e.target.id === "oath-name")) {
       validateOath();
     }
   });
@@ -2002,7 +2192,7 @@
       closeModals();
     }
     // Enter in oath pledge submits if valid
-    if (e.key === "Enter" && document.activeElement && document.activeElement.id === "oath-pledge") {
+    if (e.key === "Enter" && document.activeElement && (document.activeElement.id === "oath-email" || document.activeElement.id === "oath-name")) {
       if (!el("oath-submit").disabled) {
         e.preventDefault();
         swearIn();
